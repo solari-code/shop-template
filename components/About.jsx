@@ -33,13 +33,13 @@ export default function AboutSection() {
                             I make pieces that are meant to last and stay with you.
                         </h2>
                         <p className="font-sans font-light text-base md:text-lg text-gray-600 leading-relaxed">
-                            I'm Mara. Selva Studio started because I wanted to dress with purpose: pieces
+                            I&apos;m Mara. Selva Studio started because I wanted to dress with purpose: pieces
                             made by hand from carefully chosen upcycled fabrics. Every garment
                             has a story before it reaches you, and I hope it keeps
                             writing it with you.
                             <br />
-                            If you're looking for something that fits well and tells
-                            a story, I'm here.
+                            If you&apos;re looking for something that fits well and tells
+                            a story, I&apos;m here.
                         </p>
                     </div>
                 </div>

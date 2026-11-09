@@ -17,9 +17,9 @@ export default function Success() {
             </h1>
 
             <p className="font-light text-sm text-brand-content/70 leading-relaxed">
-                I've received your order and I'm preparing it with lots of care.
+                I&apos;ve received your order and I&apos;m preparing it with lots of care.
                 <br />
-                I'll send you an email with the details.
+                I&apos;ll send you an email with the details.
             </p>
 
             <hr className="border-brand-base-300" />

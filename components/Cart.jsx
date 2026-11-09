@@ -2,26 +2,44 @@
 
 import { useCartStore } from "@/lib/cartStore";
 import { formatPrice } from "@/utils/formatPrice";
-import { urlFor } from "@/sanity/lib/client";
+import { imageUrl } from "@/lib/imageUrl";
 import Image from "next/image";
 import Link from "next/link";
-import { createCheckoutSession } from "@/actions/stripe"
-import { useTransition } from 'react'
+import { createCheckoutSession } from "@/actions/checkout"
+import { useEffect, useRef, useState, useTransition } from 'react'
 
 export default function Cart() {
-    const { items, increaseItem, decreaseItem, removeItem, getTotal } = useCartStore();
+    const { items, increaseItem, decreaseItem, removeItem, getTotal, replaceItems } = useCartStore();
 
     const [isPending, startTransition] = useTransition()
+    // Messages from the checkout check: { issues: [...] } or { error }
+    const [notice, setNotice] = useState(null)
+    const noticeRef = useRef(null)
+
+    // The checkout button is below the cart, so bring the messages into view
+    useEffect(() => {
+        if (notice) noticeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, [notice])
 
     const handleCheckout = async () => {
+        setNotice(null)
         startTransition(async () => {
-            await createCheckoutSession(items)
+            // Redirects to the checkout if the cart is up to date; otherwise
+            // returns the issues and the corrected cart.
+            const result = await createCheckoutSession(items)
+            if (result?.cart) replaceItems(result.cart)
+            if (result?.issues?.length || result?.error) {
+                setNotice({ issues: result.issues ?? [], error: result.error })
+            }
         })
     }
+
+    const noticeBox = notice && <CheckoutNotice notice={notice} />
 
     if (items.length === 0) {
         return (
             <div className="flex flex-col items-center">
+                {noticeBox && <div ref={noticeRef} className="w-full max-w-3xl mb-8 scroll-mt-24">{noticeBox}</div>}
                 <p className="text-lg text-brand-content/80 mb-6">Your cart is empty.</p>
                 <Link
                     href="/products"
@@ -45,6 +63,8 @@ export default function Cart() {
 
             {/* <h1 className="font-light text-2xl md:text-3xl tracking-wide mb-8">Cart</h1> */}
 
+            {noticeBox && <div ref={noticeRef} className="mb-8 scroll-mt-24">{noticeBox}</div>}
+
             <div className="space-y-0">
                 {items.map((item) => (
                     <div
@@ -55,9 +75,9 @@ export default function Cart() {
                             href={`/products/${item.slug}`}
                             className="relative w-20 md:w-24 shrink-0 overflow-hidden bg-brand-base-300 aspect-[3/4]"
                         >
-                            {item.image ? (
+                            {imageUrl(item.image) ? (
                                 <Image
-                                    src={urlFor(item.image).width(160).quality(80).url()}
+                                    src={imageUrl(item.image, { width: 160, quality: 80 })}
                                     alt={item.title}
                                     fill
                                     className="object-cover"
@@ -143,6 +163,26 @@ export default function Cart() {
             >
                 {isPending ? "Redirecting..." : "Go to checkout"}
             </button>
+        </div>
+    );
+}
+
+function CheckoutNotice({ notice }) {
+    if (notice.error) {
+        return (
+            <div role="alert" className="border border-red-200 bg-red-50 text-red-800 px-5 py-4 text-sm font-light">
+                {notice.error}
+            </div>
+        );
+    }
+    return (
+        <div role="alert" className="border border-amber-200 bg-amber-50 text-amber-900 px-5 py-4 text-sm font-light space-y-2">
+            <p className="font-normal">Your cart was updated, please check it before continuing.</p>
+            <ul className="list-disc pl-5 space-y-1">
+                {notice.issues.map((issue) => (
+                    <li key={issue}>{issue}</li>
+                ))}
+            </ul>
         </div>
     );
 }

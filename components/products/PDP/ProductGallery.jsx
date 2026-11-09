@@ -2,15 +2,13 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { urlFor } from "@/sanity/lib/client";
+import { imageUrl } from "@/lib/imageUrl";
 
 export default function ProductGallery({ images = [], title = "" }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const mainImage = images[selectedIndex];
 
-  const mainUrl = mainImage
-    ? urlFor(mainImage).width(800).quality(85).url()
-    : null;
+  const mainUrl = imageUrl(mainImage, { width: 800, quality: 85 });
 
   return (
     <div className="flex flex-col md:flex-row gap-4 md:gap-6">
@@ -18,9 +16,7 @@ export default function ProductGallery({ images = [], title = "" }) {
       {images.length > 0 && (
         <div className="flex md:flex-col gap-2 order-2 md:order-1 overflow-x-auto md:overflow-x-visible md:overflow-y-auto pb-2 md:pb-0 md:max-h-[calc(80vh-2rem)] shrink-0">
           {images.map((image, i) => {
-            const thumbUrl = image
-              ? urlFor(image).width(150).quality(70).url()
-              : null;
+            const thumbUrl = imageUrl(image, { width: 150, quality: 70 });
             const isActive = i === selectedIndex;
             return (
               <button

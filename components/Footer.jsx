@@ -18,9 +18,9 @@ const Footer = () => {
             </div>
             <div className="footer-overlay absolute inset-0 z-10"></div>
             <div className="container mx-auto px-6 py-16 text-center z-20 relative h-full w-full">
-                <a href="/" className="inline-block mb-8 w-[250px]">
+                <Link href="/" className="inline-block mb-8 w-[250px]">
                     <Image width="300" height="100" alt="logo" src="/images/logo/logo_slowfashion_white.png" />
-                </a>
+                </Link>
 
                 {/* <div className="flex justify-center space-x-6 mb-8">
                     <Link href="/" className="text-brand-gray hover:text-white transition-colors">Home</Link>

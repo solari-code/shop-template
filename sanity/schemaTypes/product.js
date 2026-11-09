@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import { categories } from "./categories";
 
-export default {
+const product = {
   name: "product",
   title: "Product",
   type: "document",
@@ -127,3 +127,5 @@ export default {
     },
   },
 }
+
+export default product

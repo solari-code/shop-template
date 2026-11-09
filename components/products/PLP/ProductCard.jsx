@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { urlFor } from "@/sanity/lib/client";
+import { imageUrl as getImageUrl } from "@/lib/imageUrl";
 import { formatPrice } from "@/utils/formatPrice";
 
 export default function ProductCard({ product }) {
     const firstImage = product.images?.[0];
-    const imageUrl = firstImage ? urlFor(firstImage).width(600).quality(80).url() : null;
+    const imageUrl = getImageUrl(firstImage, { width: 600, quality: 80 });
     const hasDiscount = !!product.discountedPrice;
 
     return (

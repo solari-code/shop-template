@@ -1,13 +1,28 @@
 import { NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
-import { writeClient } from '@/sanity/lib/client'
-import { sendOrderNotificationToOwner, sendOrderConfirmationToCustomer } from '@/actions/resend'
+import { getStripe } from '@/lib/stripe'
+import { isLocalMode } from '@/lib/shopMode'
+import { isConfigured } from '@/lib/env'
+import { orderFromStripeSession } from '@/lib/orders/fromStripeSession'
+import { processOrder } from '@/lib/orders/processOrder'
 
+// Stripe webhook: checks the signature, then hands completed checkouts to
+// the shared order flow (lib/orders/processOrder.js).
 export async function POST(request) {
+    // Local mode has no Stripe; the local test checkout handles orders itself.
+    if (isLocalMode()) {
+        return NextResponse.json({ error: 'Stripe webhook is disabled in local mode' }, { status: 404 })
+    }
+
+    if (!isConfigured(process.env.STRIPE_WEBHOOK_SECRET)) {
+        console.error('Stripe webhook received, but STRIPE_WEBHOOK_SECRET is not set. Event was not processed.')
+        return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
+    }
+
+    const stripe = getStripe()
     const body = await request.text()
     const signature = request.headers.get('stripe-signature')
 
-    let event;
+    let event
     try {
         event = stripe.webhooks.constructEvent(
             body,
@@ -20,111 +35,12 @@ export async function POST(request) {
     }
 
     if (event.type === 'checkout.session.completed') {
-        const session = event.data.object
+        const order = await orderFromStripeSession(event.data.object, stripe)
+        const result = await processOrder(order)
 
-        const shippingCost = ((session.shipping_cost?.amount_total ?? 0) / 100).toFixed(0)
-        let shippingDisplayName = 'Standard shipping'
-
-        if (session.shipping_cost?.shipping_rate) {
-            try {
-                const shippingRate = await stripe.shippingRates.retrieve(
-                    session.shipping_cost.shipping_rate
-                )
-                shippingDisplayName = shippingRate.display_name
-            } catch (error) {
-                console.error('Error fetching shipping rate:', error)
-            }
-        }
-
-        const items = JSON.parse(session.metadata?.items ?? '[]')
-        const customerEmail = session.customer_details?.email
-        const customerName = session.customer_details?.name
-        const total = (session.amount_total / 100).toFixed(0)
-        const shippingAddress = session.shipping_details?.address
-        const shippingName = session.shipping_details?.name
-        const orderNumber = session.metadata?.orderNumber
-
-        // 1. Update stock in Sanity + load product details
-        const itemsWithDetails = await Promise.all(
-            items.map(async (item) => {
-                try {
-                    const product = await writeClient.fetch(`
-                        *[_type == "product" && productId == $productId][0] {
-                            _id,
-                            title,
-                            price,
-                            discountedPrice,
-                            variants
-                        }
-                    `, { productId: item.productId })
-
-                    if (!product) {
-                        console.error('Product not found:', item.productId)
-                        return {
-                            ...item,
-                            title: product.title ?? item.productId,
-                            size: variant?.size ?? item.variantId,
-                            price: product.discountedPrice ?? product.price ?? 0,
-                        }
-                    }
-
-                    const variant = product.variants?.find(v => v.variantId === item.variantId)
-
-                    const updatedVariants = product.variants.map(v => {
-                        if (v.variantId === item.variantId) {
-                            const newStock = Math.max(0, v.stock - item.quantity)
-                            return { ...v, stock: newStock }
-                        }
-                        return v
-                    })
-
-                    await writeClient
-                        .patch(product._id)
-                        .set({ variants: updatedVariants })
-                        .commit()
-
-                    return {
-                        ...item,
-                        title: product.title ?? item.productId,
-                        size: variant?.size ?? item.variantId,
-                        price: product.discountedPrice ?? product.price ?? 0,
-                    }
-
-                } catch (error) {
-                    console.error('Error updating stock for product:', item.productId, error)
-                    return { ...item, title: item.productId, size: item.variantId }
-                }
-            })
-        )
-
-        // 2. Emails
-        try {
-            await Promise.all([
-                sendOrderNotificationToOwner({
-                    customerName,
-                    customerEmail,
-                    items: itemsWithDetails,
-                    total,
-                    paymentIntent: session.payment_intent,
-                    shippingName,
-                    shippingAddress,
-                    shippingDisplayName,
-                    shippingCost,
-                    orderNumber
-                }),
-                sendOrderConfirmationToCustomer({
-                    customerName,
-                    customerEmail,
-                    items: itemsWithDetails,
-                    total,
-                    shippingAddress,
-                    shippingDisplayName,
-                    shippingCost,
-                    orderNumber
-                })
-            ])
-        } catch (error) {
-            console.error('Error sending emails:', error)
+        // Nothing was done yet, so let Stripe retry the event later.
+        if (result.status === 'claim_failed') {
+            return NextResponse.json({ error: 'Order could not be recorded, please retry' }, { status: 500 })
         }
     }
 

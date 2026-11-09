@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 
-export default {
+const variant = {
     name: "variant",
     title: "Size",
     type: "object",
@@ -58,3 +58,5 @@ export default {
         }
     }
 }
+
+export default variant

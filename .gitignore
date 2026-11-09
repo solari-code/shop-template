@@ -41,5 +41,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# local mode data (stock, test checkouts, saved emails)
+/.local-data/
+
 # local Claude Code state
 .claude/

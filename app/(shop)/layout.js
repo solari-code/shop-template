@@ -2,6 +2,8 @@ import { getActiveCategories } from "@/actions/sanity";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { categories as allCategories } from "@/sanity/schemaTypes/categories";
+import LocalModeBanner from "@/components/LocalModeBanner";
+import { isLocalMode } from "@/lib/shopMode";
 
 export default async function ShopLayout({ children }) {
 
@@ -13,6 +15,7 @@ export default async function ShopLayout({ children }) {
             <Header categories={activeCategories} />
             {children}
             <Footer />
+            {isLocalMode() && <LocalModeBanner />}
         </>
     );
 }

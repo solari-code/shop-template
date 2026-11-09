@@ -67,7 +67,7 @@ export default function ProductPDPInfo({ product }) {
       <AddToCartButton product={product} selectedSize={selectedSize} />
 
       <p className="text-sm text-brand-content/50 text-center">
-        Can't find your size?{" "}
+        Can&apos;t find your size?{" "}
         <Link href="/#contact" className="underline hover:text-brand-content transition-colors">
           Write to me
         </Link>
