@@ -1,4 +1,6 @@
 import { nanoid } from "nanoid";
+import { commerceConfig } from "../../config/commerce.mjs";
+import { sizeLabel } from "../../lib/config/shop.mjs";
 
 const variant = {
     name: "variant",
@@ -19,15 +21,8 @@ const variant = {
             title: "Size",
             type: "string",
             options: {
-                list: [
-                    { title: "One size", value: "One size" },
-                    { title: "XS", value: "XS" },
-                    { title: "S", value: "S" },
-                    { title: "M", value: "M" },
-                    { title: "L", value: "L" },
-                    { title: "XL", value: "XL" },
-                    { title: "XXL", value: "XXL" },
-                ],
+                // From config/commerce.mjs
+                list: commerceConfig.sizes.map(s => ({ title: s.label ?? s.value, value: s.value })),
                 layout: "radio",
                 direction: "horizontal",
             },
@@ -52,7 +47,7 @@ const variant = {
         select: { size: "size", stock: "stock", active: "active" },
         prepare({ size, stock, active }) {
             return {
-                title: size,
+                title: sizeLabel(size),
                 subtitle: `Stock: ${stock} · ${active ? "✓ Active" : "✗ Inactive"}`,
             }
         }

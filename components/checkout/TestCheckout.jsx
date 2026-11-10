@@ -4,29 +4,23 @@ import { useActionState, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { formatPrice } from "@/utils/formatPrice";
-import { siteConfig } from "@/config/site";
+import { sizeText } from "@/lib/config/shop.mjs";
+import { siteConfig } from "@/config/site.mjs";
 import { imageUrl } from "@/lib/imageUrl";
 import { cancelTestCheckout, payTestCheckout } from "@/actions/testCheckout";
-
-// Example customer, so a test order is one click away. All fields can be edited.
-const TEST_CUSTOMER = {
-    email: "test.customer@example.com",
-    name: "Test Customer",
-    line1: "123 Test Street",
-    line2: "",
-    city: "Springfield",
-    state: "IL",
-    postalCode: "62701",
-};
-
-const COUNTRY_NAMES = { US: "United States" };
+import { addressRules, testCustomer } from "@/lib/checkout/address.mjs";
 
 const inputClass =
-    "w-full px-3 py-2.5 border border-brand-base-300 bg-white text-sm font-light text-brand-content focus:outline-none focus:border-brand-content/50 transition-colors";
-const labelClass = "block text-xs uppercase tracking-widest text-brand-content/60 mb-1.5";
+    "w-full px-3 py-2.5 border border-brand-base-300 bg-brand-surface text-sm font-light text-brand-content focus:outline-none transition-colors";
+const labelClass = "block text-xs uppercase tracking-widest mb-1.5";
 
+// countries: [{ code, name }] from config/shipping.mjs
 export default function TestCheckout({ checkout, shippingOptions, countries }) {
-    const [values, setValues] = useState({ ...TEST_CUSTOMER, country: countries[0] });
+    // Prefilled example customer, so a test order is one click away. All
+    // fields can be edited; the example address is only set for the US.
+    const [values, setValues] = useState(() => testCustomer(countries[0]?.code));
+    // State and postal code labels depend on the country
+    const address = addressRules(values.country);
     // A paid checkout shows the shipping that was chosen when paying
     const [shippingOptionId, setShippingOptionId] = useState(checkout.shippingOptionId ?? shippingOptions[0]?.id);
     const [state, payAction, isPaying] = useActionState(payTestCheckout, null);
@@ -46,7 +40,7 @@ export default function TestCheckout({ checkout, shippingOptions, countries }) {
     });
 
     return (
-        <div className="min-h-screen bg-white font-sans font-light text-brand-content">
+        <div className="min-h-screen bg-brand-base-100 font-sans font-light text-brand-content">
             <div className="bg-amber-100 border-b border-amber-200 text-amber-900 text-xs md:text-sm text-center px-4 py-2">
                 <span className="font-normal uppercase tracking-widest">Test checkout</span>
                 <span className="mx-2" aria-hidden>·</span>
@@ -60,16 +54,16 @@ export default function TestCheckout({ checkout, shippingOptions, countries }) {
                         {/* Centred like in the header, so any logo file lines up */}
                         <div className="text-center space-y-6">
                             <Image
-                                src="/images/logo/logo_black.png"
+                                src={siteConfig.logos.dark}
                                 width={150}
                                 height={26}
                                 alt={siteConfig.name}
                                 className="h-[22px] w-auto object-contain mx-auto"
                             />
                             <div>
-                                <p className="text-sm text-brand-content/60">{isPaid ? `Paid to ${siteConfig.name}` : `Pay ${siteConfig.name}`}</p>
+                                <p className="text-sm">{isPaid ? `Paid to ${siteConfig.name}` : `Pay ${siteConfig.name}`}</p>
                                 <p className="text-4xl tracking-tight mt-1">{formatPrice(total)}</p>
-                                <p className="text-xs text-brand-content/50 mt-2">Order {checkout.orderNumber}</p>
+                                <p className="text-xs mt-2">Order {checkout.orderNumber}</p>
                             </div>
                         </div>
 
@@ -83,8 +77,8 @@ export default function TestCheckout({ checkout, shippingOptions, countries }) {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm">{item.title}</p>
-                                            <p className="text-xs text-brand-content/60">
-                                                {item.size === "One size" ? item.size : `Size ${item.size}`} · Qty {item.quantity}
+                                            <p className="text-xs">
+                                                {sizeText(item.size)} · Qty {item.quantity}
                                             </p>
                                         </div>
                                         <p className="text-sm">{formatPrice(item.price * item.quantity)}</p>
@@ -95,11 +89,11 @@ export default function TestCheckout({ checkout, shippingOptions, countries }) {
 
                         <dl className="border-t border-brand-base-300 pt-4 space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <dt className="text-brand-content/60">Subtotal</dt>
+                                <dt className="">Subtotal</dt>
                                 <dd>{formatPrice(subtotal)}</dd>
                             </div>
                             <div className="flex justify-between">
-                                <dt className="text-brand-content/60">{shipping?.name ?? "Shipping"}</dt>
+                                <dt className="">{shipping?.name ?? "Shipping"}</dt>
                                 <dd>{formatPrice(shipping?.amount ?? 0)}</dd>
                             </div>
                             <div className="flex justify-between border-t border-brand-base-300 pt-3 text-base">
@@ -135,8 +129,8 @@ export default function TestCheckout({ checkout, shippingOptions, countries }) {
                                     <div>
                                         <label htmlFor="checkout-country" className={labelClass}>Country</label>
                                         <select {...field("country")}>
-                                            {countries.map(code => (
-                                                <option key={code} value={code}>{COUNTRY_NAMES[code] ?? code}</option>
+                                            {countries.map(({ code, name }) => (
+                                                <option key={code} value={code}>{name}</option>
                                             ))}
                                         </select>
                                     </div>
@@ -154,11 +148,11 @@ export default function TestCheckout({ checkout, shippingOptions, countries }) {
                                             <input type="text" required autoComplete="address-level2" {...field("city")} />
                                         </div>
                                         <div>
-                                            <label htmlFor="checkout-state" className={labelClass}>State</label>
-                                            <input type="text" required autoComplete="address-level1" {...field("state")} />
+                                            <label htmlFor="checkout-state" className={labelClass}>{address.stateLabel}</label>
+                                            <input type="text" required={address.stateRequired} autoComplete="address-level1" {...field("state")} />
                                         </div>
                                         <div className="col-span-2 sm:col-span-1">
-                                            <label htmlFor="checkout-postalCode" className={labelClass}>ZIP</label>
+                                            <label htmlFor="checkout-postalCode" className={labelClass}>{address.postalCodeLabel}</label>
                                             <input type="text" required autoComplete="postal-code" {...field("postalCode")} />
                                         </div>
                                     </div>
@@ -182,7 +176,7 @@ export default function TestCheckout({ checkout, shippingOptions, countries }) {
                                                 />
                                                 <span className="flex-1">
                                                     {option.name}
-                                                    <span className="block text-xs text-brand-content/50">
+                                                    <span className="block text-xs">
                                                         {option.deliveryDays.min}–{option.deliveryDays.max} business days
                                                     </span>
                                                 </span>
@@ -194,7 +188,7 @@ export default function TestCheckout({ checkout, shippingOptions, countries }) {
 
                                 <fieldset>
                                     <legend className="text-base mb-4">Payment</legend>
-                                    <p className="border border-dashed border-brand-content/30 bg-brand-base-200 px-4 py-3 text-sm text-brand-content/70">
+                                    <p className="border border-dashed bg-brand-base-200 px-4 py-3 text-sm">
                                         Test payment, no card needed. <strong className="font-normal text-brand-content">Pay</strong> simulates
                                         a successful payment: the stock is lowered and the order emails are saved
                                         in <code className="text-xs whitespace-nowrap">.local-data/emails/</code>.
@@ -211,7 +205,7 @@ export default function TestCheckout({ checkout, shippingOptions, countries }) {
                                     <button
                                         type="submit"
                                         disabled={isPaying}
-                                        className="w-full py-3 text-sm uppercase tracking-widest border border-brand-content bg-brand-content text-white hover:bg-transparent hover:text-brand-content transition-colors duration-200 disabled:opacity-50 disabled:cursor-wait"
+                                        className="w-full py-3 text-sm uppercase tracking-widest border border-brand-content bg-brand-content text-brand-content-inverse hover:bg-transparent hover:text-brand-content transition-colors duration-200 disabled:opacity-50 disabled:cursor-wait"
                                     >
                                         {isPaying ? "Processing…" : `Pay ${formatPrice(total)}`}
                                     </button>
@@ -220,7 +214,7 @@ export default function TestCheckout({ checkout, shippingOptions, countries }) {
                                         formAction={cancelTestCheckout}
                                         formNoValidate
                                         disabled={isPaying}
-                                        className="w-full py-3 text-sm uppercase tracking-widest border border-brand-base-300 text-brand-content/70 hover:border-brand-content hover:text-brand-content transition-colors duration-200 disabled:opacity-50"
+                                        className="w-full py-3 text-sm uppercase tracking-widest border border-brand-base-300 hover:border-brand-content hover:text-brand-content transition-colors duration-200 disabled:opacity-50"
                                     >
                                         Cancel and return to cart
                                     </button>
@@ -243,14 +237,14 @@ function ClosedCheckout({ status }) {
             <h1 className="text-2xl tracking-wide">
                 {paid ? "This checkout was already paid" : "This checkout was cancelled"}
             </h1>
-            <p className="text-sm text-brand-content/70">
+            <p className="text-sm">
                 {paid
                     ? "The order has been placed. Paying again is not possible."
                     : "Nothing was bought. Go back to the cart to start a new checkout."}
             </p>
             <Link
                 href={paid ? "/products" : "/cart"}
-                className="inline-block text-xs uppercase tracking-widest border border-brand-content px-6 py-3 hover:bg-brand-content hover:text-white transition-colors duration-200"
+                className="inline-block text-xs uppercase tracking-widest border border-brand-content px-6 py-3 hover:bg-brand-content hover:text-brand-content-inverse transition-colors duration-200"
             >
                 {paid ? "Continue shopping" : "Back to cart"}
             </Link>

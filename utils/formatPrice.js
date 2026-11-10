@@ -1,7 +1,3 @@
-export function formatPrice(amount) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+// Formats a price in the shop currency (config/commerce.mjs) and locale
+// (config/site.mjs): "$20" for whole amounts, "$19.50" otherwise.
+export { formatPrice } from "@/lib/config/shop.mjs";

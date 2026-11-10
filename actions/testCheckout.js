@@ -3,7 +3,8 @@
 import { redirect } from 'next/navigation'
 import { isLocalMode } from '@/lib/shopMode'
 import { cancelCheckout, payCheckout } from '@/lib/payments/local'
-import { shippingCountries } from '@/config/shipping'
+import { shippingCountries } from '@/config/shipping.mjs'
+import { missingAddressFields } from '@/lib/checkout/address.mjs'
 
 // Pay and Cancel on the local test checkout page (app/test-checkout/[id]).
 // Only available in local mode.
@@ -41,10 +42,8 @@ function validate({ customer, shipping }) {
     const missing = [
         !customer.email && 'email',
         !customer.name && 'full name',
-        !a.line1 && 'address',
-        !a.city && 'city',
-        !a.state && 'state',
-        !a.postal_code && 'ZIP code',
+        // The state is only required for the US (lib/checkout/address.mjs)
+        ...missingAddressFields(a),
     ].filter(Boolean)
     if (missing.length) return `Please fill in: ${missing.join(', ')}.`
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) return 'Please enter a valid email address.'

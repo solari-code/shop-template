@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, usePathname } from "next/navigation";
-import CategoriesFilter from "./CatgeoriesFilter";
+import CategoriesFilter from "./CategoriesFilter";
 import ProductGrid from "./ProductGrid";
 
 export default function ProductsClient({ products, activeCategories }) {
@@ -31,7 +31,7 @@ export default function ProductsClient({ products, activeCategories }) {
                 onCategoryChange={handleCategoryChange}
             />
             {filteredProducts.length === 0 ? (
-                <p className="font-sans font-light text-gray-500 text-center py-12">
+                <p className="font-sans font-light text-brand-content-muted text-center py-12">
                     {selectedCategory
                         ? "There are no products in this category."
                         : "There are no products at the moment."}

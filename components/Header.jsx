@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Drawer from "./Drawer";
 import { useCartStore } from "@/lib/cartStore";
+import { siteConfig } from "@/config/site.mjs";
 
 export default function HeaderClient({ categories = [] }) {
     const pathname = usePathname();
@@ -31,12 +32,12 @@ export default function HeaderClient({ categories = [] }) {
 
     const closeMenu = () => setMenuOpen(false);
     const navBg = !isHome || isScrolled || menuOpen;
-    const textClass = navBg ? "text-brand-content" : "text-white";
+    const textClass = navBg ? "text-brand-content" : "text-brand-on-image";
 
     return (
         <>
             <nav
-                className={`fixed top-0 left-0 w-full flex items-center justify-between transition duration-300 p-4 z-[50] ${navBg ? "bg-white shadow-md backdrop-blur-lg" : "bg-transparent"}`}
+                className={`fixed top-0 left-0 w-full flex items-center justify-between transition duration-300 p-4 z-[50] ${navBg ? "bg-brand-surface shadow-md backdrop-blur-lg" : "bg-transparent"}`}
                 aria-label="Main navigation"
             >
                 <button
@@ -57,10 +58,10 @@ export default function HeaderClient({ categories = [] }) {
                         style={{ maxHeight: "26px" }}
                     >
                         <Image
-                            src="/images/logo/logo_black.png"
+                            src={siteConfig.logos.dark}
                             width={150}
                             height={50}
-                            alt="Selva Studio"
+                            alt={siteConfig.name}
                             className="h-[26px] w-auto object-contain object-center"
                             style={{ maxHeight: "26px" }}
                             priority
@@ -73,7 +74,7 @@ export default function HeaderClient({ categories = [] }) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                     {cartCount > 0 && (
-                        <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 bg-red-500 text-white text-xs font-medium rounded-full">
+                        <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 bg-brand-badge text-brand-badge-text text-xs font-medium rounded-full">
                             {cartCount}
                         </span>
                     )}

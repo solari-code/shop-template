@@ -56,7 +56,7 @@ export default function ProductGallery({ images = [], title = "" }) {
             priority
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-brand-content/50 text-sm font-light">
+          <div className="w-full h-full flex items-center justify-center text-sm font-light">
             No image
           </div>
         )}

@@ -1,5 +1,10 @@
 import { nanoid } from "nanoid";
-import { categories } from "./categories";
+import { commerceConfig } from "../../config/commerce.mjs";
+import { shopCurrency, formatPrice } from "../../lib/config/shop.mjs";
+import { currencyInfo } from "../../lib/config/money.mjs";
+
+// Decimals a price may have in the shop currency (e.g. 2 for USD, 0 for JPY)
+const priceDecimals = currencyInfo(shopCurrency).decimals;
 
 const product = {
   name: "product",
@@ -45,7 +50,8 @@ const product = {
       group: "info",
       of: [{ type: "string" }],
       options: {
-        list: categories.map(c => ({ title: c.title, value: c.slug })),
+        // From config/commerce.mjs
+        list: commerceConfig.categories.map(c => ({ title: c.title, value: c.slug })),
         layout: "grid",
       },
       validation: Rule => Rule.required().min(1)
@@ -65,17 +71,18 @@ const product = {
     // ── PRICING ───────────────────────────────────
     {
       name: "price",
-      title: "Price (USD)",
+      title: `Price (${shopCurrency})`,
       type: "number",
       group: "pricing",
-      validation: Rule => Rule.required().min(0)
+      validation: Rule => Rule.required().min(0).precision(priceDecimals)
     },
     {
       name: "discountedPrice",
-      title: "Sale price (USD)",
+      title: `Sale price (${shopCurrency})`,
       description: "Only fill in if the product is on sale",
       type: "number",
       group: "pricing",
+      validation: Rule => Rule.min(0).precision(priceDecimals),
     },
 
     // ── SIZES & STOCK ─────────────────────────────
@@ -120,9 +127,11 @@ const product = {
       return {
         title,
         media,
-        subtitle: discountedPrice
-          ? `$${discountedPrice} (was $${price})`
-          : `$${price}`
+        subtitle: price == null
+          ? undefined
+          : discountedPrice
+            ? `${formatPrice(discountedPrice)} (was ${formatPrice(price)})`
+            : formatPrice(price)
       };
     },
   },

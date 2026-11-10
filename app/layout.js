@@ -1,29 +1,36 @@
-import localFont from "next/font/local";
 import "./globals.css";
+import { siteConfig } from "@/config/site.mjs";
+import { themeConfig } from "@/config/theme.mjs";
+import { siteLanguage } from "@/lib/config/shop.mjs";
+import { themeVariables, fontVariables } from "@/lib/config/theme.mjs";
+// The fonts chosen in config/theme.mjs (bundled in app/fonts, SIL OFL).
+// next.config.mjs points these names to the chosen font files.
+import bodyFont from "@shop/body-font";
+import headingFont from "@shop/heading-font";
 
-// Fonts are bundled in app/fonts (SIL OFL), so builds don't need to reach Google Fonts.
-// Inter is used below; Bagel Fat One (the logo face), Fraunces and Lora are there as well.
-const inter = localFont({
-  src: './fonts/InterVariable-latin.woff2',
-  weight: '100 900',
-  variable: '--font-inter',
-});
+const { name, tagline, description, url, logos } = siteConfig;
 
 export const metadata = {
-  title: "Selva Studio",
-  description: "Shop handmade slow fashion pieces from upcycled fabrics at Selva Studio.",
+  // Absolute URLs for social preview images
+  metadataBase: new URL(url),
+  title: {
+    default: name,
+    // Page titles get the shop name added: "Products — Selva Studio"
+    template: `%s — ${name}`,
+  },
+  description,
   openGraph: {
-    title: "Selva Studio - Slow Fashion",
-    description: "Shop handmade slow fashion pieces from upcycled fabrics at Selva Studio.",
-    url: "https://example.com",
-    siteName: "Selva Studio",
+    title: `${name} - ${tagline}`,
+    description,
+    url,
+    siteName: name,
     type: "website",
     images: [
       {
-        url: "/images/logo/openGraph_logo.png",
+        url: logos.openGraph,
         width: 1200,
         height: 630,
-        alt: "Selva Studio",
+        alt: name,
       },
     ],
   },
@@ -34,13 +41,18 @@ export const metadata = {
     ],
     apple: '/favicon/apple-touch-icon.png'
   },
-  manifest: "/manifest.json",
+  // The web app manifest is app/manifest.js (linked automatically)
 };
+
+// Font classes define --font-inter etc.; the same class appears only once
+// when body and headings use the same font.
+const fontClasses = [...new Set([bodyFont.variable, headingFont.variable])].join(" ");
 
 export default async function RootLayout({ children }) {
   return (
-    <html lang="en" data-theme="selva">
-      <body className={` ${inter.variable} font-sans antialiased bg-white`}>
+    // Theme colours and overlays as CSS variables (see app/globals.css)
+    <html lang={siteLanguage} style={themeVariables(themeConfig)}>
+      <body className={`${fontClasses} font-sans antialiased bg-brand-base-100 text-brand-content`} style={fontVariables(themeConfig)}>
         {children}
       </body>
     </html>

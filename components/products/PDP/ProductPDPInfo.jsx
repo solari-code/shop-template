@@ -4,29 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatPrice } from "@/utils/formatPrice";
 import SizeSelector from "./SizeSelector";
-import { useCartStore } from "@/lib/cartStore";
 import AddToCartButton from "./AddToCartButton";
+import { textsConfig } from "@/config/texts.mjs";
+import { shopText, contactHref } from "@/lib/config/shop.mjs";
 
 export default function ProductPDPInfo({ product }) {
   const [selectedSize, setSelectedSize] = useState(null);
-  const { items, addItem } = useCartStore();
-
-  const cartItem = items.find(
-    i => i.productId === product.productId && i.variantId === selectedSize?.variantId
-  );
-  const quantityInCart = cartItem?.quantity ?? 0;
-  const isMaxStock = cartItem ? quantityInCart >= selectedSize?.stock : false;
-
-  const buttonLabel = !selectedSize
-    ? "Select a size"
-    : isMaxStock
-      ? "All available stock is already in your cart"
-      : "Add to cart";
-
-  const handleAddToCart = () => {
-    if (!selectedSize || isMaxStock) return;
-    addItem(product, selectedSize);
-  };
 
   return (
     <div className="space-y-6 font-sans font-light text-brand-content">
@@ -39,14 +22,14 @@ export default function ProductPDPInfo({ product }) {
           {formatPrice(product.discountedPrice ?? product.price)}
         </span>
         {product.discountedPrice && (
-          <span className="font-light text-base line-through text-brand-content/40">
+          <span className="font-light text-base line-through">
             {formatPrice(product.price)}
           </span>
         )}
       </div>
 
       {product.description && (
-        <p className="font-light text-sm leading-relaxed text-brand-content/70 whitespace-pre-line">
+        <p className="font-light text-sm leading-relaxed whitespace-pre-line">
           {product.description}
         </p>
       )}
@@ -66,10 +49,10 @@ export default function ProductPDPInfo({ product }) {
 
       <AddToCartButton product={product} selectedSize={selectedSize} />
 
-      <p className="text-sm text-brand-content/50 text-center">
-        Can&apos;t find your size?{" "}
-        <Link href="/#contact" className="underline hover:text-brand-content transition-colors">
-          Write to me
+      <p className="text-sm text-center">
+        {shopText(textsConfig.sizeHelp)}{" "}
+        <Link href={contactHref} className="underline hover:text-brand-content transition-colors">
+          {shopText(textsConfig.contactLink)}
         </Link>
       </p>
     </div>

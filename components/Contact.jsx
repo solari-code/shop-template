@@ -2,8 +2,27 @@
 
 import { useState } from "react";
 import { sendContactEmail } from "@/actions/resend";
+import { siteConfig } from "@/config/site.mjs";
+import { shopText } from "@/lib/config/shop.mjs";
+import MultilineText from "./MultilineText";
 
-const ContactSection = () => {
+// WhatsApp message for the link: strict URL encoding (also ' ( ) ! *)
+const encodeMessage = (text) =>
+  encodeURIComponent(text).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+
+// Homepage section "contact" (config/homepage.mjs): contact form, and a
+// WhatsApp button if siteConfig.contact.whatsapp is set.
+const ContactSection = ({
+  id,
+  eyebrow,
+  heading,
+  text,
+  messagePlaceholder = "Your message...",
+  whatsappLabel = "Contact via WhatsApp",
+  whatsappMessage,
+}) => {
+  // Optional: without a number, the WhatsApp button is hidden
+  const whatsapp = siteConfig.contact.whatsapp;
 
   const [status, setStatus] = useState({ loading: false, message: null, isError: false });
 
@@ -15,14 +34,7 @@ const ContactSection = () => {
 
     const formData = new FormData(e.target);
 
-    // Honeypot checks
-
-    // if ((Date.now() - timestampOpened) < 4000) {
-    //     console.log('Honeypot - Less than 4s, blocking spam submission.');
-    //     onClose();
-    //     return;
-    // }
-
+    // Honeypot: a hidden field that only bots fill in
     if (formData.get('website')) {
       console.log('Honeypot field filled, blocking spam submission.');
       return;
@@ -50,25 +62,28 @@ const ContactSection = () => {
 
   return (
     <section
-      id="contact"
+      id={id}
       className="bg-brand-base-100 py-20 md:py-28 px-6"
       aria-labelledby="contact-heading"
     >
       <div className="max-w-2xl mx-auto">
-        <p className="fade-in text-center text-[0.8rem] tracking-[0.28em] uppercase text-gray-500 font-light mb-3">
-          Contact
-        </p>
+        {eyebrow && (
+          <p className="fade-in text-center text-[0.8rem] tracking-[0.28em] uppercase text-brand-content-muted font-light mb-3">
+            {shopText(eyebrow)}
+          </p>
+        )}
         <div className="fade-in">
           <h2
             id="contact-heading"
-            className="font-sans font-light text-2xl md:text-3xl text-brand-content mb-4 text-center"
+            className="font-heading font-light text-2xl md:text-3xl text-brand-content mb-4 text-center"
           >
-            Need a special size or a costume?
+            {shopText(heading)}
           </h2>
-          <p className="font-sans font-light text-sm md:text-base text-gray-500 mb-10 max-w-lg mx-auto text-center leading-relaxed">
-            Get in touch to ask about custom sizes or to request a special piece
-            made just for you.
-          </p>
+          {text && (
+            <p className="font-sans font-light text-sm md:text-base text-brand-content-muted mb-10 max-w-lg mx-auto text-center leading-relaxed">
+              <MultilineText text={shopText(text)} />
+            </p>
+          )}
         </div>
 
         <form
@@ -82,7 +97,7 @@ const ContactSection = () => {
           <div>
             <label
               htmlFor="contact-name"
-              className="block text-xs tracking-wider uppercase text-gray-500 mb-2 font-light"
+              className="block text-xs tracking-wider uppercase text-brand-content-muted mb-2 font-light"
             >
               Name
             </label>
@@ -92,13 +107,13 @@ const ContactSection = () => {
               type="text"
               name="name"
               placeholder="Your name"
-              className="w-full px-4 py-3 border border-brand-base-300 bg-brand-base-200 text-brand-content placeholder-gray-400 focus:outline-none focus:border-brand-content/40 transition-colors font-light text-sm"
+              className="w-full px-4 py-3 border border-brand-base-300 bg-brand-base-200 text-brand-content placeholder-brand-content-subtle focus:outline-none transition-colors font-light text-sm"
             />
           </div>
           <div>
             <label
               htmlFor="contact-email"
-              className="block text-xs tracking-wider uppercase text-gray-500 mb-2 font-light"
+              className="block text-xs tracking-wider uppercase text-brand-content-muted mb-2 font-light"
             >
               Email
             </label>
@@ -108,13 +123,13 @@ const ContactSection = () => {
               type="email"
               name="email"
               placeholder="you@email.com"
-              className="w-full px-4 py-3 border border-brand-base-300 bg-brand-base-200 text-brand-content placeholder-gray-400 focus:outline-none focus:border-brand-content/40 transition-colors font-light text-sm"
+              className="w-full px-4 py-3 border border-brand-base-300 bg-brand-base-200 text-brand-content placeholder-brand-content-subtle focus:outline-none transition-colors font-light text-sm"
             />
           </div>
           <div>
             <label
               htmlFor="contact-message"
-              className="block text-xs tracking-wider uppercase text-gray-500 mb-2 font-light"
+              className="block text-xs tracking-wider uppercase text-brand-content-muted mb-2 font-light"
             >
               Message
             </label>
@@ -122,16 +137,16 @@ const ContactSection = () => {
               id="contact-message"
               name="message"
               required
-              placeholder="Tell me what you need..."
+              placeholder={shopText(messagePlaceholder)}
               rows={4}
-              className="w-full px-4 py-3 border border-brand-base-300 bg-brand-base-200 text-brand-content placeholder-gray-400 focus:outline-none focus:border-brand-content/40 transition-colors font-light text-sm resize-y min-h-[120px]"
+              className="w-full px-4 py-3 border border-brand-base-300 bg-brand-base-200 text-brand-content placeholder-brand-content-subtle focus:outline-none transition-colors font-light text-sm resize-y min-h-[120px]"
             />
           </div>
 
           <button
             disabled={status.loading}
             type="submit"
-            className="w-full px-6 py-3 bg-brand-content text-white font-sans text-sm tracking-widest uppercase hover:bg-brand-purple transition-colors"
+            className="w-full px-6 py-3 bg-brand-content text-brand-content-inverse font-sans text-sm tracking-widest uppercase hover:bg-brand-primary transition-colors"
           >
             {status.loading ? 'Sending...' : 'Send message'}
           </button>
@@ -159,22 +174,26 @@ const ContactSection = () => {
           </div>
         )}
 
-        {/* Divider */}
-        <div className="flex items-center gap-4 my-6">
-          <div className="flex-1 h-px bg-brand-base-300" />
-          <span className="text-[0.8rem] tracking-[0.2em] uppercase text-gray-400 font-light">or</span>
-          <div className="flex-1 h-px bg-brand-base-300" />
-        </div>
+        {whatsapp && (
+          <>
+            {/* Divider */}
+            <div className="flex items-center gap-4 my-6">
+              <div className="flex-1 h-px bg-brand-base-300" />
+              <span className="text-[0.8rem] tracking-[0.2em] uppercase text-brand-content-subtle font-light">or</span>
+              <div className="flex-1 h-px bg-brand-base-300" />
+            </div>
 
-        <a
-          href="https://wa.me/10000000000?text=Hi%2C%20I%27m%20interested%20in%20a%20special%20size%20or%20a%20one-of-a-kind%20piece."
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-3 w-full px-6 flex gap-3 justify-center py-3 bg-brand-purple text-white font-sans  text-sm tracking-widest uppercase hover:bg-brand-content transition-colors"
-        >
-          <WhatsAppIcon className="w-4 h-4 shrink-0" />
-          Contact via WhatsApp
-        </a>
+            <a
+              href={`https://wa.me/${whatsapp}${whatsappMessage ? `?text=${encodeMessage(shopText(whatsappMessage))}` : ""}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-3 w-full px-6 flex gap-3 justify-center py-3 bg-brand-primary text-brand-content-inverse font-sans  text-sm tracking-widest uppercase hover:bg-brand-content transition-colors"
+            >
+              <WhatsAppIcon className="w-4 h-4 shrink-0" />
+              {shopText(whatsappLabel)}
+            </a>
+          </>
+        )}
       </div>
     </section >
   );

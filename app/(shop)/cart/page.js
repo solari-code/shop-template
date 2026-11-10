@@ -1,15 +1,13 @@
 import PageBanner from "@/components/PageBanner";
 import Cart from "@/components/Cart";
+import { pageMetadata, pageBanner } from "@/lib/config/shop.mjs";
 
-export const metadata = {
-    title: "Cart — Selva Studio",
-    description: "Your shopping cart at Selva Studio.",
-};
+export const metadata = pageMetadata("cart");
 
 export default function CartPage() {
     return (
         <>
-            <PageBanner image="/images/hero_6.jpeg" height="300px" title="Cart" marginTop="72px" overlayOpacity={35} />
+            <PageBanner {...pageBanner("cart")} height="300px" marginTop="72px" />
             <main className="bg-brand-base-100 py-12 md:py-20">
                 <div className="container mx-auto px-4 md:px-6 max-w-6xl">
                     <Cart />

@@ -41,7 +41,7 @@ function StudioUnavailable() {
           To manage products in the Studio, set <code className="bg-brand-base-300 px-1">NEXT_PUBLIC_SANITY_PROJECT_ID</code> and{' '}
           <code className="bg-brand-base-300 px-1">NEXT_PUBLIC_SANITY_DATASET</code> in <code className="bg-brand-base-300 px-1">.env.local</code> and rebuild.
         </p>
-        <Link href="/" className="inline-block underline hover:text-brand-content/70 transition-colors">
+        <Link href="/" className="inline-block underline transition-colors">
           Back to the shop
         </Link>
       </div>

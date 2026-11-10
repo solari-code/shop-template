@@ -1,23 +1,29 @@
-"use client"
-
 import Hero from "@/components/Hero";
 import HomeImageSlider from "@/components/HomepageSlider";
-import AboutPreview from "@/components/About";
+import AboutSection from "@/components/About";
 import ContactSection from "@/components/Contact";
-import Footer from "@/components/Footer";
-import useScrollFadeIn from "@/hooks/useFadeOnScroll";
+import FadeInObserver from "@/components/FadeInObserver";
+import { homepageSections } from "@/config/homepage.mjs";
+
+// Section types in config/homepage.mjs and their components. Each component
+// gets the section's settings as props.
+const SECTIONS = {
+  hero: Hero,
+  slider: HomeImageSlider,
+  about: AboutSection,
+  contact: ContactSection,
+};
 
 export default function Home() {
-  useScrollFadeIn();
-
   return (
     <>
       <main>
-        <Hero />
-        <HomeImageSlider />
-        <AboutPreview />
-        <ContactSection />
+        {homepageSections.map(({ type, ...section }) => {
+          const Section = SECTIONS[type];
+          return <Section key={section.id} {...section} />;
+        })}
       </main>
+      <FadeInObserver />
     </>
   );
 }

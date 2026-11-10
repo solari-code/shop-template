@@ -33,8 +33,8 @@ export default function AddToCartButton({ product, selectedSize }) {
             disabled={!selectedSize || isMaxStock || allOutOfStock}
             className={`w-full py-3 font-light text-sm uppercase tracking-widest transition-colors duration-200 disabled:cursor-not-allowed
                 ${allOutOfStock
-                    ? "border border-brand-base-300 text-brand-content/30 bg-transparent"
-                    : "border border-brand-content bg-brand-content text-white hover:bg-transparent hover:text-brand-content disabled:opacity-40"
+                    ? "border border-brand-base-300 bg-transparent"
+                    : "border border-brand-content bg-brand-content text-brand-content-inverse hover:bg-transparent hover:text-brand-content disabled:opacity-40"
                 }`}
         >
             {buttonLabel}

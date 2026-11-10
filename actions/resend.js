@@ -1,6 +1,8 @@
 'use server'
 
 import { sendContactMessage } from '@/lib/email'
+import { textsConfig } from '@/config/texts.mjs'
+import { shopText } from '@/lib/config/shop.mjs'
 
 // Contact form (components/Contact.jsx). In live mode the message is sent
 // via Resend; in local mode it is printed to the console and saved in
@@ -11,14 +13,14 @@ export async function sendContactEmail(formData) {
     const message = formData.get('message')
 
     if (!name || !email || !message) {
-        return { message: "Please fill in all fields.", error: true }
+        return { message: shopText(textsConfig.contactForm.missingFields), error: true }
     }
 
     try {
         await sendContactMessage({ name, email, message })
-        return { message: "Message sent! I'll get back to you soon." }
+        return { message: shopText(textsConfig.contactForm.sent) }
     } catch (error) {
         console.error("Error sending email:", error)
-        return { message: "Something went wrong. Please try again.", error: true }
+        return { message: shopText(textsConfig.contactForm.failed), error: true }
     }
 }

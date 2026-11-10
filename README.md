@@ -11,6 +11,7 @@ Online shop for a small fashion label, built with Next.js 16, Sanity and Stripe.
 - **Content:** products are managed in Sanity Studio, embedded under `/admin`
 - **Emails:** contact form, order notification for the shop owner and order confirmation for the customer (Resend)
 - **Local mode:** runs fully offline without any accounts: example products, a test checkout, and emails saved as files
+- **Config-driven:** brand, currency, categories, sizes, shipping, theme, homepage sections and texts are set in [`config/`](config/) and checked before the shop starts (see [Setting up a new shop](#setting-up-a-new-shop))
 
 ## Getting started
 
@@ -29,6 +30,51 @@ npm run dev
 ```
 
 The studio is at [http://localhost:3000/admin](http://localhost:3000/admin) (only when a Sanity project is configured).
+
+## Setting up a new shop
+
+Everything that differs between shops is set in the files in [`config/`](config/). Each file explains its settings in comments.
+
+| File | What it sets |
+| --- | --- |
+| [`site.mjs`](config/site.mjs) | shop name, tagline, description, URL, language (`locale`), owner, contact details, social links, logos, email sender |
+| [`commerce.mjs`](config/commerce.mjs) | currency, product categories, sizes |
+| [`shipping.mjs`](config/shipping.mjs) | shipping options and prices, countries you ship to |
+| [`theme.mjs`](config/theme.mjs) | colours, fonts, how dark the images behind text are, email colours |
+| [`homepage.mjs`](config/homepage.mjs) | homepage sections (`hero`, `slider`, `about`, `contact`): order, texts, images |
+| [`pages.mjs`](config/pages.mjs) | page titles and descriptions, banner images, side menu, footer image |
+| [`texts.mjs`](config/texts.mjs) | texts in the shop's own voice: success page, contact form replies, order confirmation email |
+
+Texts can use placeholders such as `{shopName}`, `{ownerFirstName}` or `{shopEmail}`, so renaming the shop can't leave the old name behind.
+
+### Checklist
+
+1. **Brand and contact** (`site.mjs`): name, description, URL, `locale` (e.g. `de-DE`, used for the page language, prices and country names), contact email, and optionally phone, WhatsApp and social links. Set the email sender to an address whose domain you verify in Resend.
+2. **Currency, categories and sizes** (`commerce.mjs`). Prices are shown without decimals when they are whole ("$20") and with decimals otherwise ("$19.50").
+3. **Shipping** (`shipping.mjs`): options with prices in the shop currency (at most 5, a Stripe limit) and the countries you ship to.
+4. **Theme** (`theme.mjs`): colours, and fonts from the four bundled in `app/fonts/`. For a dark theme, swap the light and dark colours (dark `base-*`, light `content`, dark `content-inverse`).
+5. **Homepage, pages and menu** (`homepage.mjs`, `pages.mjs`): remove, reorder or repeat sections; menu links like `/#about` point to a section's `id`.
+6. **Texts** (`texts.mjs`), written in the first person ("I've received your order") in the template.
+7. **Images** in `public/`: logos (`images/logo/`), favicons (`favicon/`, plus `app/favicon.ico`), hero, banner, about and slider images. Paths in the config start with `/`, e.g. `/images/hero.jpg`.
+8. **Legal pages**: the privacy policy and terms are in [`components/Privacy.jsx`](components/Privacy.jsx) and [`components/Terms.jsx`](components/Terms.jsx); they only take the shop name and email from the config, the text itself is yours to write.
+9. **Example products** for local mode (`data/products.js`): their categories and sizes should exist in `commerce.mjs`.
+10. **Check**: `npm run check-config` and `npm test`, then `npm run dev` and click through the shop in local mode.
+
+### The config check
+
+The config is checked when the shop starts or is built (`next.config.mjs`) and by `npm run check-config`:
+
+- **Errors** stop `npm run dev`, `npm run build` and `npm start` with a list of what to fix, e.g. an unknown currency code, a duplicate category, a missing image file, a menu link to a section that doesn't exist, a misspelled setting or placeholder.
+- **Warnings** point out likely mistakes, e.g. example products that use a category or size that is not configured.
+- **Example values** of the template (`example.com` addresses, the placeholder WhatsApp number, a social link without a profile) are listed by `npm run check-config` and warned about when the shop runs in live mode. Replace them before going live.
+
+In `npm run dev`, config changes show up after a page reload, but the config check and font changes only run on a restart; run `npm run check-config` after editing.
+
+### Careful on a shop that already has products
+
+- **Currency:** prices are plain numbers and are not converted. Changing `USD` to `EUR` turns $20 into €20.
+- **Category slugs and size values** are stored on the products in Sanity. Renaming one hides it on existing products; change the `title` or `label` instead, which are only used for display.
+- **Stripe amounts:** prices are converted to Stripe's smallest unit for each currency (cents for USD, yen for JPY, ...). Stripe's special cases like UGX are refused by the config check. Place a real test order after changing the currency (see [Going live](#going-live)).
 
 ## Shop modes
 
@@ -49,9 +95,9 @@ The mode is decided when the app is **built**: Next.js bakes `NEXT_PUBLIC_*` val
 
 Local mode needs no accounts and no internet connection. A "Local mode" badge in the corner of the shop pages shows that it is active.
 
-- **Products:** the example products are in [`data/products.js`](data/products.js), in the same shape as the Sanity documents. They cover sale prices, sold-out products, hidden sizes, a hidden product, a one-size accessory and sizes with a stock of 1. Edit the file to change them.
+- **Products:** the example products are in [`data/products.js`](data/products.js), in the same shape as the Sanity documents. They cover sale prices, sold-out products, hidden sizes, a hidden product, a one-size accessory and sizes with a stock of 1. Edit the file to change them; categories and sizes should exist in [`config/commerce.mjs`](config/commerce.mjs) (the shop warns about others when it starts).
 - **Stock and orders:** sales lower the stock locally. The changes are stored in `.local-data/store.json` (sold quantities, processed orders, test checkouts); `data/products.js` itself is never changed.
-- **Test checkout:** "Go to checkout" opens a test checkout page instead of Stripe. The customer details are prefilled and can be edited. **Pay** simulates a successful payment and runs the same order flow as the Stripe webhook (lower stock, send emails). **Cancel** returns to the cart, like Stripe's back link.
+- **Test checkout:** "Go to checkout" opens a test checkout page instead of Stripe, with the countries from [`config/shipping.mjs`](config/shipping.mjs). The customer details are prefilled (the example address only for the US) and can be edited; US addresses need a state and ZIP code, others a postal code. **Pay** simulates a successful payment and runs the same order flow as the Stripe webhook (lower stock, send emails). **Cancel** returns to the cart, like Stripe's back link.
 - **Emails:** order emails and contact form messages are printed to the server console and saved as HTML files in `.local-data/emails/`. Open them in a browser to check the layout.
 - **Reset:** `npm run reset-local` deletes `.local-data`, which puts the stock back to the values in `data/products.js` and removes the saved orders, checkouts and emails.
 - **Studio:** without a Sanity project, `/admin` shows a short notice instead of the studio. (With Sanity configured, the studio works in both modes, e.g. to set up products before Stripe is ready.)
@@ -62,8 +108,9 @@ Local mode needs no accounts and no internet connection. A "Local mode" badge in
 
 1. **Sanity:** create a project and dataset and set `NEXT_PUBLIC_SANITY_PROJECT_ID` and `NEXT_PUBLIC_SANITY_DATASET`. Create an API token with write access (Editor) and set it as `SANITY_API_WRITE_TOKEN`; the webhook needs it to update stock and to record processed orders.
 2. **Stripe:** set `STRIPE_SECRET_KEY`. Add a webhook endpoint for `https://your-domain/api/webhook` with the event `checkout.session.completed` and set its signing secret as `STRIPE_WEBHOOK_SECRET`. Set `NEXT_PUBLIC_URL` to your site URL (used for the success and cancel redirects).
-3. **Resend:** set `RESEND_API_KEY` and `NOTIFICATION_EMAIL` (where order and contact notifications go). The sender address is set in [`lib/email/config.js`](lib/email/config.js); its domain must be verified in Resend.
-4. **Place a real test order** before opening the shop (see below).
+3. **Resend:** set `RESEND_API_KEY` and `NOTIFICATION_EMAIL` (where order and contact notifications go). The sender is set in [`config/site.mjs`](config/site.mjs) (`emailSender`); its domain must be verified in Resend.
+4. **Config:** run `npm run check-config` and replace all example values it lists (URL, email addresses, WhatsApp number, social links). In live mode the shop also warns about them when it starts.
+5. **Place a real test order** before opening the shop (see below).
 
 ### Before going live: place a real test order
 
@@ -124,18 +171,22 @@ See [`.env.example`](.env.example). None are needed for local mode.
 - `app/api/webhook/`: Stripe webhook
 - `actions/`: server actions for product queries, checkout, the test checkout and the contact form
 - `components/`: UI; `components/products/` holds the product list (PLP) and product page (PDP)
-- `config/`: brand and contact details (`site.js`), shipping options (`shipping.js`)
+- `config/`: shop settings (brand, contact, currency, categories, sizes, shipping, theme, homepage, texts); see [Setting up a new shop](#setting-up-a-new-shop)
 - `data/products.js`: example products for local mode
+- `lib/config/`: the config check (`validate.mjs`), helpers for prices and Stripe amounts (`money.mjs`), texts, theme variables and page settings (`shop.mjs`)
 - `lib/shopMode.js`: decides between local and live mode
 - `lib/catalog/`: product data from Sanity or from the local example products
 - `lib/payments/`: Stripe Checkout and the local test checkout
-- `lib/checkout/`: price and stock check before checkout
+- `lib/checkout/`: price and stock check before checkout, address rules of the test checkout
 - `lib/orders/`: shared order flow, duplicate protection, reading Stripe sessions
 - `lib/email/`: email templates and sending (Resend, or console and files locally)
 - `lib/local/`: the local data file (`.local-data/store.json`)
 - `lib/cartStore.js`: cart state
-- `sanity/`: Sanity config, schemas (`product`, `variant`, categories) and clients
+- `sanity/`: Sanity config, schemas (`product`, `variant`; categories and sizes come from the config) and clients
+- `app/fonts/`: the bundled fonts, one small module per font (chosen in `config/theme.mjs`)
 - `scripts/reset-local.mjs`: resets local mode (`npm run reset-local`)
+- `scripts/check-config.mjs`: checks the config (`npm run check-config`)
+- `tests/`: tests for the config check, prices, addresses and helpers (`npm test`, no extra packages). They use a fixed example config (`tests/fixtures/config.mjs`), so they pass whatever a shop sets in `config/`; only the check that the shop's own config is valid depends on it.
 
 ## License
 

@@ -2,20 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --color-base-100: #ffffff;
-  /* Pure white */
-  --color-base-200: #f4f4f6;
-  /* Cool off-white with a slight purple undertone */
-  --color-base-300: #e8e8ed;
-  /* Cool light grey */
-  --color-content: #1c1917;
-  --color-blue: #7dc2fd;
-  /* Brand */
-  --color-purple: #9567f3;
-  /* Brand */
-  --color-accent: #498bfa;
-  --color-neutral: #0b0809;
+/* Colours (--color-*), overlays (--overlay-*) and fonts (--font-body,
+   --font-heading) come from config/theme.mjs; the root layout sets them. */
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading), sans-serif;
+  }
 }
 
 html {
@@ -23,20 +16,16 @@ html {
   scroll-padding-top: 0;
 }
 
-body {
-  background-color: var(--color-base-200);
-}
-
 
 /* HERO */
 .hero-overlay {
-  background-color: color-mix(in oklab, var(--color-neutral) 35%, transparent);
+  background-color: color-mix(in oklab, var(--color-neutral) var(--overlay-hero), transparent);
 }
 
 
 /* FOOTER */
 .footer-overlay {
-  background-color: color-mix(in oklab, var(--color-neutral) 10%, transparent);
+  background-color: color-mix(in oklab, var(--color-neutral) var(--overlay-footer), transparent);
 }
 
 .fade-in {

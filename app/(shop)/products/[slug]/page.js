@@ -9,7 +9,8 @@ export async function generateMetadata({ params }) {
   const product = await getProductBySlug(slug);
   if (!product) return {};
   return {
-    title: `${product.title} — Selva Studio`,
+    // The root layout adds the shop name
+    title: product.title,
     description: product.description?.slice(0, 160),
   };
 }
@@ -23,7 +24,7 @@ export default async function ProductDetailPage({ params }) {
     <main className="mt-[72px] bg-brand-base-100 font-sans font-light text-brand-content">
       <div className="container mx-auto px-4 md:px-6 max-w-6xl py-8 md:py-12">
         <nav
-          className="flex items-center gap-2 text-sm text-brand-content/70 mb-6"
+          className="flex items-center gap-2 text-sm mb-6"
           aria-label="Breadcrumb"
         >
           <Link

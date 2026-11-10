@@ -1,19 +1,10 @@
 "use client";
 
 const filterButtonBase = "font-sans font-light text-brand-content border rounded-sm px-4 py-2 transition-colors";
-const filterButtonActive = "bg-brand-content text-white border-brand-content";
+const filterButtonActive = "bg-brand-content text-brand-content-inverse border-brand-content";
 const filterButtonInactive = "bg-transparent border-brand-content hover:bg-brand-base-200";
 
-const CATEGORY_LABELS = {
-    accessories: "Accessories",
-    blouses: "Blouses",
-    shirts: "Shirts",
-    corsets: "Corsets",
-    skirts: "Skirts",
-    pants: "Pants",
-    dresses: "Dresses",
-}
-
+// activeCategories: [{ slug, title }] in the order of config/commerce.mjs
 export default function CategoriesFilter({ activeCategories, selectedCategory, onCategoryChange }) {
     if (!activeCategories?.length) return null;
 
@@ -26,14 +17,14 @@ export default function CategoriesFilter({ activeCategories, selectedCategory, o
             >
                 All
             </button>
-            {activeCategories.map((slug) => (
+            {activeCategories.map(({ slug, title }) => (
                 <button
                     type="button"
                     key={slug}
                     onClick={() => onCategoryChange(slug)}
                     className={`${filterButtonBase} ${selectedCategory === slug ? filterButtonActive : filterButtonInactive}`}
                 >
-                    {CATEGORY_LABELS[slug] ?? slug}
+                    {title}
                 </button>
             ))}
         </div>

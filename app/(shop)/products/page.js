@@ -3,24 +3,24 @@ import PageBanner from "@/components/PageBanner";
 import Footer from "@/components/Footer";
 import ProductsClient from "@/components/products/PLP/ProductsClient";
 import { getProducts, getActiveCategories } from "@/actions/sanity";
+import { pageMetadata, pageBanner, shopCategories } from "@/lib/config/shop.mjs";
 
-export const metadata = {
-    title: "Products — Selva Studio",
-    description: "Handmade slow fashion pieces from upcycled fabrics. Selva Studio.",
-};
+export const metadata = pageMetadata("products");
 
 export default async function ProductsPage({ searchParams }) {
     const params = await searchParams;
     // const initialCategory = params?.category ?? "";
 
-    const [products, activeCategories] = await Promise.all([
+    const [products, activeSlugs] = await Promise.all([
         getProducts(),
         getActiveCategories(),
     ]);
+    // Categories that have products, in the order of config/commerce.mjs
+    const activeCategories = shopCategories(activeSlugs);
 
     return (
         <>
-            <PageBanner image="/images/hero_2.jpeg" height="300px" title="Products" marginTop="72px" overlayOpacity={35} />
+            <PageBanner {...pageBanner("products")} height="300px" marginTop="72px" />
             <main className="bg-brand-base-100 py-12 md:py-20">
                 <div className="container mx-auto px-4 md:px-6 max-w-6xl">
                     <ProductsClient

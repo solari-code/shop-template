@@ -1,12 +1,10 @@
 import ProductCard from "./ProductCard";
 
 export default function ProductGrid({ products, title }) {
-    console.log({ products })
-
     return (
         <div>
             {title && (
-                <h2 className="font-sans font-light text-2xl text-brand-content text-center mb-8">
+                <h2 className="font-heading font-light text-2xl text-brand-content text-center mb-8">
                     {title}
                 </h2>
             )}

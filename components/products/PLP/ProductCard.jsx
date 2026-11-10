@@ -25,20 +25,20 @@ export default function ProductCard({ product }) {
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm font-light">
+                    <div className="w-full h-full flex items-center justify-center text-brand-content-subtle text-sm font-light">
                         No image
                     </div>
                 )}
             </div>
-            <h3 className="font-sans font-light text-brand-content text-lg md:text-xl tracking-tight text-center">
+            <h3 className="font-heading font-light text-brand-content text-lg md:text-xl tracking-tight text-center">
                 {product.title}
             </h3>
             <div className="flex gap-2 justify-center items-center mt-0.5">
-                <p className="font-sans font-light text-brand-content/80 text-sm">
+                <p className="font-sans font-light text-sm">
                     {formatPrice(hasDiscount ? product.discountedPrice : product.price)}
                 </p>
                 {hasDiscount && (
-                    <p className="font-sans font-light text-brand-content/40 text-sm line-through">
+                    <p className="font-sans font-light text-sm line-through">
                         {formatPrice(product.price)}
                     </p>
                 )}

@@ -1,5 +1,6 @@
 // Shipping options offered at checkout, used by the Stripe checkout and the
-// local test checkout. Amounts are in USD.
+// local test checkout. Amounts are in the shop currency (config/commerce.mjs).
+// Stripe allows at most 5 options.
 export const shippingOptions = [
     {
         id: 'standard',
@@ -15,5 +16,5 @@ export const shippingOptions = [
     },
 ]
 
-// Countries customers can ship to (ISO codes)
+// Countries customers can ship to (ISO 3166-1 alpha-2 codes, e.g. 'US', 'DE')
 export const shippingCountries = ['US']
