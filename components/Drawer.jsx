@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { navigation } from "@/config/pages.mjs";
+import { wishlistConfig } from "@/config/wishlist.mjs";
 import { shopText } from "@/lib/config/shop.mjs";
+import { enabledFeatures, isHrefAvailable } from "@/lib/config/features.mjs";
+
+// Links to pages of features that are turned off (e.g. the wishlist) are left out
+const features = enabledFeatures({ wishlist: wishlistConfig });
+const menuItems = navigation.filter((item) => isHrefAvailable(item.href, features));
 
 // Side menu. The items come from `navigation` in config/pages.mjs;
 // categories: [{ slug, title }] that have products.
@@ -37,7 +43,7 @@ export default function Drawer({ isOpen, onClose, categories = [] }) {
 
                 {/* Nav Links */}
                 <ul className="space-y-1 font-sans text-sm uppercase tracking-wider">
-                    {navigation.map((item, i) => (
+                    {menuItems.map((item, i) => (
                         <li key={`${i}-${item.href}`}>
                             <Link href={item.href} onClick={onClose} className="block py-2.5 hover:opacity-70 transition-opacity">
                                 {shopText(item.label)}

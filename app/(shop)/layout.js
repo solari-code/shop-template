@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { shopCategories } from "@/lib/config/shop.mjs";
 import LocalModeBanner from "@/components/LocalModeBanner";
+import PrepaintScript from "@/components/PrepaintScript";
 import { isLocalMode } from "@/lib/shopMode";
 
 export default async function ShopLayout({ children }) {
@@ -12,6 +13,8 @@ export default async function ShopLayout({ children }) {
 
     return (
         <>
+            {/* Before the header: shows the saved cart and wishlist from the first frame */}
+            <PrepaintScript />
             <Header categories={activeCategories} />
             {children}
             <Footer />

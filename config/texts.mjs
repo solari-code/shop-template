@@ -19,6 +19,27 @@ export const textsConfig = {
         questions: 'Any questions?',
     },
 
+    // Wishlist (config/wishlist.mjs); only needed when the wishlist is on
+    wishlist: {
+        // Heart button on products, read out by screen readers and shown
+        // as a tooltip. `remove` is also the button on products that are no
+        // longer available.
+        save: 'Save to wishlist',
+        remove: 'Remove from wishlist',
+        // Heart icon in the header, read out by screen readers
+        headerLink: 'Wishlist',
+        // Wishlist page without saved products, and the link below it
+        empty: 'Your wishlist is empty.\nTap the heart on a piece you love to save it for later.',
+        emptyLink: 'View products',
+        // Button on the wishlist page (sizes are chosen on the card)
+        moveToCart: 'Move to cart',
+        // Shown after moving a product to the cart. Can also use {productTitle}
+        movedToCart: '{productTitle} is now in your cart.',
+        viewCart: 'View cart',
+        // Products that are no longer in the shop
+        unavailable: 'No longer available',
+    },
+
     // Replies shown after sending the contact form
     contactForm: {
         sent: "Message sent! I'll get back to you soon.",

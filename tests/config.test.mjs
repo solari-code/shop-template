@@ -16,6 +16,7 @@ import { validateConfig, validateLocalProducts, startupWarnings, SECTION_TYPES, 
 import { fillText, placeholdersIn, textValues } from '../lib/config/text.mjs'
 import * as shop from '../lib/config/shop.mjs'
 import { themeVariables, fontVariables, hexToChannels } from '../lib/config/theme.mjs'
+import { enabledFeatures, featureOfHref, isHrefAvailable } from '../lib/config/features.mjs'
 
 // An empty folder (no public/), so image files are not checked
 const NO_PUBLIC_DIR = fs.mkdtempSync(`${os.tmpdir()}/shop-config-test-`)
@@ -204,7 +205,48 @@ describe('errors', () => {
         assert.deepEqual(paths(warnings), ['navigation[5].href'])
     })
 
+    test('wishlist settings', () => {
+        assertError(c => { c.wishlist.enabled = 'yes' }, 'wishlist.enabled', 'true or false')
+        assertError(c => { c.wishlist.showOnProductCard = true }, 'wishlist.showOnProductCard', 'Unknown setting')
+        assertError(c => { delete c.wishlist.showInHeader }, 'wishlist.showInHeader', 'Missing')
+        assertError(c => { delete c.wishlist }, 'config.wishlist', 'Missing')
+        assertError(c => { c.wishlist.maxItems = 0 }, 'wishlist.maxItems', 'whole number')
+        assertError(c => { c.wishlist.maxItems = 12.5 }, 'wishlist.maxItems', 'whole number')
+        assertError(c => { c.wishlist.maxItems = '50' }, 'wishlist.maxItems', 'whole number')
+        assertError(c => { c.wishlist.maxItems = 501 }, 'wishlist.maxItems', 'at most 500')
+        assert.deepEqual(check(c => { delete c.wishlist.maxItems }).errors, [{ path: 'wishlist.maxItems', message: 'Missing.' }])
+        assert.deepEqual(check(c => { c.wishlist.maxItems = 500 }).errors, [])
+        // Any combination of true and false is fine
+        assert.deepEqual(check(c => { c.wishlist.showInHeader = false; c.wishlist.removeAfterMoveToCart = false }).errors, [])
+    })
+
+    test('wishlist page and texts are only required when the wishlist is on', () => {
+        const withoutWishlist = (c) => { delete c.pages.wishlist; delete c.texts.wishlist }
+        assertError(withoutWishlist, 'pages.wishlist', 'Missing')
+        assertError(withoutWishlist, 'texts.wishlist', 'Missing')
+        assertError(c => { delete c.texts.wishlist.moveToCart }, 'texts.wishlist.moveToCart', 'Missing')
+        const off = check(c => { withoutWishlist(c); c.wishlist.enabled = false })
+        assert.deepEqual(off.errors, [])
+        assert.deepEqual(off.warnings, [])
+        // When they are kept while the wishlist is off, they are still checked
+        assertError(c => { c.wishlist.enabled = false; c.pages.wishlist.banner.title = '' }, 'pages.wishlist.banner.title', 'empty')
+    })
+
+    test('links to the wishlist', () => {
+        const toWishlist = (c) => c.navigation.push({ label: 'Wishlist', href: '/wishlist' })
+        assert.deepEqual(check(toWishlist).warnings, [])
+        // Turned off: menu links are hidden (a warning), other links would lead nowhere (an error)
+        const off = check(c => { toWishlist(c); c.wishlist.enabled = false })
+        assert.deepEqual(off.errors, [])
+        assert.deepEqual(off.warnings, [{ path: 'navigation[5].href', message: '"/wishlist" is hidden from the menu because wishlist.enabled is false.' }])
+        assertError(c => { c.wishlist.enabled = false; c.homepage[1].link.href = '/wishlist' }, 'homepage[1].link.href', 'wishlist.enabled is false')
+        assert.deepEqual(check(c => { c.homepage[1].link.href = '/wishlist' }).errors, [])
+    })
+
     test('placeholders in texts', () => {
+        // {productTitle} only where the text says so
+        assert.deepEqual(check(c => { c.texts.wishlist.movedToCart = 'Moved {productTitle} to the cart at {shopName}' }).errors, [])
+        assertError(c => { c.texts.wishlist.viewCart = 'View {productTitle}' }, 'texts.wishlist.viewCart', 'Unknown placeholder {productTitle}')
         assertError(c => { c.texts.emailFooter = '{shop} — {tagline}' }, 'texts.emailFooter', 'Unknown placeholder {shop}')
         // {customerName} only exists in the email greeting
         assertError(c => { c.texts.orderConfirmationEmail.subject = 'Thanks {customerName}' }, 'texts.orderConfirmationEmail.subject', '{customerName}')
@@ -414,5 +456,27 @@ describe('homepage', () => {
         const block = page.slice(page.indexOf('const SECTIONS = {'), page.indexOf('};', page.indexOf('const SECTIONS = {')))
         const types = [...block.matchAll(/^\s+(\w+): \w+,$/gm)].map(m => m[1])
         assert.deepEqual(types.sort(), Object.keys(SECTION_TYPES).sort())
+    })
+})
+
+describe('features', () => {
+    test('enabled features from the config', () => {
+        assert.deepEqual(enabledFeatures(exampleConfig), { wishlist: true })
+        assert.deepEqual(enabledFeatures({ wishlist: { ...exampleConfig.wishlist, enabled: false } }), { wishlist: false })
+        assert.deepEqual(enabledFeatures({}), { wishlist: false })
+    })
+
+    test('links to pages of features that are off are not available (the menu hides them)', () => {
+        assert.equal(featureOfHref('/wishlist'), 'wishlist')
+        assert.equal(featureOfHref('/wishlist?from=menu'), 'wishlist')
+        assert.equal(featureOfHref('/wishlist#top'), 'wishlist')
+        assert.equal(featureOfHref('/wishlists'), null)
+        assert.equal(featureOfHref('/#about'), null)
+        assert.equal(featureOfHref('https://example.org/wishlist'), null)
+        assert.equal(isHrefAvailable('/wishlist', { wishlist: true }), true)
+        assert.equal(isHrefAvailable('/wishlist', { wishlist: false }), false)
+        assert.equal(isHrefAvailable('/cart', { wishlist: false }), true)
+        const menu = exampleConfig.navigation.concat({ label: 'Wishlist', href: '/wishlist' })
+        assert.deepEqual(menu.filter(item => isHrefAvailable(item.href, { wishlist: false })), exampleConfig.navigation)
     })
 })

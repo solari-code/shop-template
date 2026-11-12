@@ -5,11 +5,23 @@ import Link from "next/link";
 import { formatPrice } from "@/utils/formatPrice";
 import SizeSelector from "./SizeSelector";
 import AddToCartButton from "./AddToCartButton";
+import WishlistButton from "@/components/wishlist/WishlistButton";
+import { wishlistConfig } from "@/config/wishlist.mjs";
+import { useWishlistStore } from "@/lib/wishlistStore";
+
+const showWishlist = wishlistConfig.enabled && wishlistConfig.showOnProductPage;
 import { textsConfig } from "@/config/texts.mjs";
 import { shopText, contactHref } from "@/lib/config/shop.mjs";
 
 export default function ProductPDPInfo({ product }) {
   const [selectedSize, setSelectedSize] = useState(null);
+  const setWishlistSize = useWishlistStore((state) => state.setSize);
+
+  const selectSize = (variant) => {
+    setSelectedSize(variant);
+    // If the product is saved, the wishlist remembers the latest size
+    if (showWishlist) setWishlistSize(product.productId, variant?.variantId);
+  };
 
   return (
     <div className="space-y-6 font-sans font-light text-brand-content">
@@ -40,14 +52,23 @@ export default function ProductPDPInfo({ product }) {
           <SizeSelector
             variants={product.variants}
             value={selectedSize}
-            onChange={setSelectedSize}
+            onChange={selectSize}
           />
         </>
       )}
 
       <hr className="border-brand-base-300" />
 
-      <AddToCartButton product={product} selectedSize={selectedSize} />
+      {showWishlist ? (
+        <div className="flex gap-2">
+          <div className="flex-1 min-w-0">
+            <AddToCartButton product={product} selectedSize={selectedSize} />
+          </div>
+          <WishlistButton product={product} variant="page" variantId={selectedSize?.variantId} />
+        </div>
+      ) : (
+        <AddToCartButton product={product} selectedSize={selectedSize} />
+      )}
 
       <p className="text-sm text-center">
         {shopText(textsConfig.sizeHelp)}{" "}

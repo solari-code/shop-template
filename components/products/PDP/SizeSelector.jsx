@@ -2,15 +2,16 @@
 
 import { sizeLabel } from "@/lib/config/shop.mjs";
 
-export default function SizeSelector({ variants = [], value, onChange }) {
+// compact: smaller and centred, for product cards (the wishlist)
+export default function SizeSelector({ variants = [], value, onChange, compact = false }) {
   const activeVariants = (variants || []).filter((v) => v.active === true);
 
   return (
-    <div>
-      <p className="font-light text-xs uppercase tracking-widest mb-3 text-brand-content">
+    <div className={compact ? "text-center" : ""}>
+      <p className={`font-light text-xs uppercase tracking-widest text-brand-content ${compact ? "mb-2" : "mb-3"}`}>
         Size
       </p>
-      <div className="flex flex-wrap gap-2">
+      <div className={`flex flex-wrap ${compact ? "gap-1.5 justify-center" : "gap-2"}`}>
         {activeVariants.map((variant) => {
           const isSelected = value?.variantId === variant.variantId;
           const outOfStock = variant.stock === 0;
@@ -22,7 +23,7 @@ export default function SizeSelector({ variants = [], value, onChange }) {
               disabled={outOfStock}
               onClick={() => !outOfStock && onChange?.(variant)}
               className={`
-                min-w-[44px] py-2.5 px-3 font-light text-sm border transition-colors duration-200
+                ${compact ? "min-w-[36px] py-1.5 px-2 text-xs" : "min-w-[44px] py-2.5 px-3 text-sm"} font-light border transition-colors duration-200
                 ${outOfStock ? "cursor-not-allowed opacity-40 border-brand-base-300 line-through" : "border-brand-content text-brand-content"}
                 ${!outOfStock && !isSelected ? "hover:bg-brand-base-300" : ""}
                 ${isSelected ? "bg-brand-content text-brand-content-inverse border-brand-content" : ""}

@@ -222,6 +222,14 @@ export const exampleConfig = {
                 "image": "/images/hero_6.jpeg"
             }
         },
+        "wishlist": {
+            "title": "Wishlist",
+            "description": "Your saved pieces at {shopName}.",
+            "banner": {
+                "title": "Wishlist",
+                "image": "/images/hero_6.jpeg"
+            }
+        },
         "checkoutSuccess": {
             "banner": {
                 "title": "Done 🤍",
@@ -274,6 +282,17 @@ export const exampleConfig = {
     "texts": {
         "contactLink": "Write to me",
         "sizeHelp": "Can't find your size?",
+        "wishlist": {
+            "save": "Save to wishlist",
+            "remove": "Remove from wishlist",
+            "headerLink": "Wishlist",
+            "empty": "Your wishlist is empty.\nTap the heart on a piece you love to save it for later.",
+            "emptyLink": "View products",
+            "moveToCart": "Move to cart",
+            "movedToCart": "{productTitle} is now in your cart.",
+            "viewCart": "View cart",
+            "unavailable": "No longer available"
+        },
         "orderSuccess": {
             "heading": "Thank you for your order!",
             "text": "I've received your order and I'm preparing it with lots of care.\nI'll send you an email with the details.",
@@ -292,5 +311,13 @@ export const exampleConfig = {
         },
         "emailSignature": "With love — {ownerFirstName}",
         "emailFooter": "{shopName} — {tagline} 🖤"
+    },
+    "wishlist": {
+        "enabled": true,
+        "showInHeader": true,
+        "showOnProductCards": true,
+        "showOnProductPage": true,
+        "removeAfterMoveToCart": true,
+        "maxItems": 100
     }
 }

@@ -11,6 +11,7 @@ import { themeConfig } from './theme.mjs'
 import { homepageSections } from './homepage.mjs'
 import { pagesConfig, navigation, footerConfig } from './pages.mjs'
 import { textsConfig } from './texts.mjs'
+import { wishlistConfig } from './wishlist.mjs'
 
 export const shopConfig = {
     site: siteConfig,
@@ -22,4 +23,5 @@ export const shopConfig = {
     navigation,
     footer: footerConfig,
     texts: textsConfig,
+    wishlist: wishlistConfig,
 }

@@ -57,3 +57,24 @@ html {
     transition-delay: 0.45s;
   }
 }
+
+/* SAVED STATE (cart and wishlist)
+   The header badges and the wishlist hearts show what is saved in the
+   browser. React sets data-count / data-saved once it knows the saved state;
+   until then, the pre-paint script (lib/prepaint.mjs) shows it with CSS. */
+
+/* Count badges: hidden when empty, and until the count is known */
+.count-badge:not([data-count]),
+.count-badge[data-count="0"] {
+  display: none;
+}
+
+/* Wishlist hearts: filled when the product is saved */
+.wishlist-heart-fill {
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+
+[data-saved="true"] .wishlist-heart-fill {
+  opacity: 1;
+}

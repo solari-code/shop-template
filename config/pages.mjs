@@ -15,6 +15,12 @@ export const pagesConfig = {
         description: 'Your shopping cart at {shopName}.',
         banner: { title: 'Cart', image: '/images/hero_6.jpeg' },
     },
+    // Only needed when the wishlist is on (config/wishlist.mjs)
+    wishlist: {
+        title: 'Wishlist',
+        description: 'Your saved pieces at {shopName}.',
+        banner: { title: 'Wishlist', image: '/images/hero_6.jpeg' },
+    },
     checkoutSuccess: {
         banner: { title: 'Done 🤍', image: '/images/hero_6.jpeg' },
     },
@@ -32,11 +38,13 @@ export const pagesConfig = {
 
 // Side menu. href: a page ('/products'), a homepage section ('/#about'),
 // or an external link ('https://...'). showCategories lists the product
-// categories below the item.
+// categories below the item. Links to the wishlist are hidden while it is
+// turned off (config/wishlist.mjs).
 export const navigation = [
     { label: 'Home', href: '/' },
     { label: 'Products', href: '/products', showCategories: true },
     { label: 'About', href: '/#about' },
+    { label: 'Wishlist', href: '/wishlist' },
     { label: 'Cart', href: '/cart' },
     { label: 'Contact', href: '/#contact' },
 ]

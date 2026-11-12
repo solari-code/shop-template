@@ -6,12 +6,13 @@ Online shop for a small fashion label, built with Next.js 16, Sanity and Stripe.
 
 - **Shop:** product list with category filter, product pages with image gallery, sizes and stock
 - **Cart:** stored in the browser (zustand), respects the stock of each size
+- **Wishlist:** customers save products with a heart and move them to the cart later, without an account (stored in the browser); can be turned off (see [Wishlist](#wishlist))
 - **Checkout:** Stripe Checkout with shipping options; prices and stock are checked on the server before the checkout starts
 - **Orders:** a webhook lowers the stock in Sanity and sends order emails, and skips orders it has already processed
 - **Content:** products are managed in Sanity Studio, embedded under `/admin`
 - **Emails:** contact form, order notification for the shop owner and order confirmation for the customer (Resend)
 - **Local mode:** runs fully offline without any accounts: example products, a test checkout, and emails saved as files
-- **Config-driven:** brand, currency, categories, sizes, shipping, theme, homepage sections and texts are set in [`config/`](config/) and checked before the shop starts (see [Setting up a new shop](#setting-up-a-new-shop))
+- **Config-driven:** brand, currency, categories, sizes, shipping, theme, homepage sections, texts and the wishlist are set in [`config/`](config/) and checked before the shop starts (see [Setting up a new shop](#setting-up-a-new-shop))
 
 ## Getting started
 
@@ -42,8 +43,9 @@ Everything that differs between shops is set in the files in [`config/`](config/
 | [`shipping.mjs`](config/shipping.mjs) | shipping options and prices, countries you ship to |
 | [`theme.mjs`](config/theme.mjs) | colours, fonts, how dark the images behind text are, email colours |
 | [`homepage.mjs`](config/homepage.mjs) | homepage sections (`hero`, `slider`, `about`, `contact`): order, texts, images |
-| [`pages.mjs`](config/pages.mjs) | page titles and descriptions, banner images, side menu, footer image |
-| [`texts.mjs`](config/texts.mjs) | texts in the shop's own voice: success page, contact form replies, order confirmation email |
+| [`pages.mjs`](config/pages.mjs) | page titles and descriptions (including the wishlist page), banner images, side menu, footer image |
+| [`texts.mjs`](config/texts.mjs) | texts in the shop's own voice: success page, contact form replies, order confirmation email, wishlist |
+| [`wishlist.mjs`](config/wishlist.mjs) | wishlist on or off, where the hearts are shown, what happens when a product is moved to the cart, how many products it holds |
 
 Texts can use placeholders such as `{shopName}`, `{ownerFirstName}` or `{shopEmail}`, so renaming the shop can't leave the old name behind.
 
@@ -55,17 +57,18 @@ Texts can use placeholders such as `{shopName}`, `{ownerFirstName}` or `{shopEma
 4. **Theme** (`theme.mjs`): colours, and fonts from the four bundled in `app/fonts/`. For a dark theme, swap the light and dark colours (dark `base-*`, light `content`, dark `content-inverse`).
 5. **Homepage, pages and menu** (`homepage.mjs`, `pages.mjs`): remove, reorder or repeat sections; menu links like `/#about` point to a section's `id`.
 6. **Texts** (`texts.mjs`), written in the first person ("I've received your order") in the template.
-7. **Images** in `public/`: logos (`images/logo/`), favicons (`favicon/`, plus `app/favicon.ico`), hero, banner, about and slider images. Paths in the config start with `/`, e.g. `/images/hero.jpg`.
-8. **Legal pages**: the privacy policy and terms are in [`components/Privacy.jsx`](components/Privacy.jsx) and [`components/Terms.jsx`](components/Terms.jsx); they only take the shop name and email from the config, the text itself is yours to write.
-9. **Example products** for local mode (`data/products.js`): their categories and sizes should exist in `commerce.mjs`.
-10. **Check**: `npm run check-config` and `npm test`, then `npm run dev` and click through the shop in local mode.
+7. **Wishlist** (`wishlist.mjs`): on by default. Turn it off with `enabled: false`, or choose where the hearts appear.
+8. **Images** in `public/`: logos (`images/logo/`), favicons (`favicon/`, plus `app/favicon.ico`), hero, banner, about and slider images. Paths in the config start with `/`, e.g. `/images/hero.jpg`.
+9. **Legal pages**: the privacy policy and terms are in [`components/Privacy.jsx`](components/Privacy.jsx) and [`components/Terms.jsx`](components/Terms.jsx); they only take the shop name and email from the config, the text itself is yours to write.
+10. **Example products** for local mode (`data/products.js`): their categories and sizes should exist in `commerce.mjs`.
+11. **Check**: `npm run check-config` and `npm test`, then `npm run dev` and click through the shop in local mode.
 
 ### The config check
 
 The config is checked when the shop starts or is built (`next.config.mjs`) and by `npm run check-config`:
 
-- **Errors** stop `npm run dev`, `npm run build` and `npm start` with a list of what to fix, e.g. an unknown currency code, a duplicate category, a missing image file, a menu link to a section that doesn't exist, a misspelled setting or placeholder.
-- **Warnings** point out likely mistakes, e.g. example products that use a category or size that is not configured.
+- **Errors** stop `npm run dev`, `npm run build` and `npm start` with a list of what to fix, e.g. an unknown currency code, a duplicate category, a missing image file, a menu link to a section that doesn't exist, a link to the wishlist while it is turned off, a misspelled setting or placeholder.
+- **Warnings** point out likely mistakes, e.g. example products that use a category or size that is not configured, or a menu link to the wishlist while it is turned off (the menu hides it).
 - **Example values** of the template (`example.com` addresses, the placeholder WhatsApp number, a social link without a profile) are listed by `npm run check-config` and warned about when the shop runs in live mode. Replace them before going live.
 
 In `npm run dev`, config changes show up after a page reload, but the config check and font changes only run on a restart; run `npm run check-config` after editing.
@@ -75,6 +78,17 @@ In `npm run dev`, config changes show up after a page reload, but the config che
 - **Currency:** prices are plain numbers and are not converted. Changing `USD` to `EUR` turns $20 into €20.
 - **Category slugs and size values** are stored on the products in Sanity. Renaming one hides it on existing products; change the `title` or `label` instead, which are only used for display.
 - **Stripe amounts:** prices are converted to Stripe's smallest unit for each currency (cents for USD, yen for JPY, ...). Stripe's special cases like UGX are refused by the config check. Place a real test order after changing the currency (see [Going live](#going-live)).
+
+## Wishlist
+
+Customers save products for later with the heart on the product cards and on the product page. The heart in the header shows how many products are saved and leads to the wishlist page (`/wishlist`).
+
+- **No account needed:** the wishlist is stored in the browser (`localStorage`, like the cart), so it stays on that device and browser. Changes show up in other open tabs right away.
+- **Sizes:** a product is saved once, not per size. If a size is selected on the product page when the heart is clicked, or chosen later (on the product page or the wishlist page), the wishlist remembers it and preselects it, as long as that size can still be bought. Products with only one size have it selected automatically.
+- **Wishlist page:** shows the saved products as cards with their current prices and stock. **Move to cart** follows the same stock rules as "Add to cart" and, by default, removes the product from the wishlist. Sold-out products stay in the wishlist. Products that were hidden or deleted are shown greyed out with their saved title and image, and can be removed.
+- **Settings** in [`config/wishlist.mjs`](config/wishlist.mjs): `enabled`, `showInHeader`, `showOnProductCards`, `showOnProductPage`, `removeAfterMoveToCart`, and `maxItems` (the most products a wishlist holds, 1 to 500; saving one more drops the oldest). The page title and banner are `wishlist` in [`config/pages.mjs`](config/pages.mjs), the texts `wishlist` in [`config/texts.mjs`](config/texts.mjs).
+- **Turned off:** with `enabled: false` there are no hearts and no header icon, `/wishlist` returns "not found" and menu links to it are hidden. The wishlist page and texts can then be removed from the config. Wishlists already saved in browsers are kept, and come back if the wishlist is turned on again.
+- **No flicker:** the server can't know what is saved in the browser. A small script at the top of the shop pages ([`lib/prepaint.mjs`](lib/prepaint.mjs)) reads the saved cart and wishlist before the page is drawn and shows the header counts and the filled hearts with CSS until the page is interactive.
 
 ## Shop modes
 
@@ -165,15 +179,15 @@ See [`.env.example`](.env.example). None are needed for local mode.
 
 ## Project structure
 
-- `app/(shop)/`: shop pages (home, products, product detail, cart, checkout success, legal pages)
+- `app/(shop)/`: shop pages (home, products, product detail, cart, wishlist, checkout success, legal pages)
 - `app/test-checkout/`: the test checkout (local mode only)
 - `app/admin/`: Sanity Studio
 - `app/api/webhook/`: Stripe webhook
 - `actions/`: server actions for product queries, checkout, the test checkout and the contact form
-- `components/`: UI; `components/products/` holds the product list (PLP) and product page (PDP)
-- `config/`: shop settings (brand, contact, currency, categories, sizes, shipping, theme, homepage, texts); see [Setting up a new shop](#setting-up-a-new-shop)
+- `components/`: UI; `components/products/` holds the product list (PLP) and product page (PDP), `components/wishlist/` the heart button and the wishlist page
+- `config/`: shop settings (brand, contact, currency, categories, sizes, shipping, theme, homepage, texts, wishlist); see [Setting up a new shop](#setting-up-a-new-shop)
 - `data/products.js`: example products for local mode
-- `lib/config/`: the config check (`validate.mjs`), helpers for prices and Stripe amounts (`money.mjs`), texts, theme variables and page settings (`shop.mjs`)
+- `lib/config/`: the config check (`validate.mjs`), helpers for prices and Stripe amounts (`money.mjs`), texts, theme variables, page settings (`shop.mjs`) and optional features and their pages (`features.mjs`)
 - `lib/shopMode.js`: decides between local and live mode
 - `lib/catalog/`: product data from Sanity or from the local example products
 - `lib/payments/`: Stripe Checkout and the local test checkout
@@ -181,12 +195,14 @@ See [`.env.example`](.env.example). None are needed for local mode.
 - `lib/orders/`: shared order flow, duplicate protection, reading Stripe sessions
 - `lib/email/`: email templates and sending (Resend, or console and files locally)
 - `lib/local/`: the local data file (`.local-data/store.json`)
-- `lib/cartStore.js`: cart state
+- `lib/cartStore.js`: cart state; `lib/cart.mjs`: its storage key and item count
+- `lib/wishlistStore.js`: wishlist state; `lib/wishlist.mjs`: the wishlist rules (adding, removing, remembered sizes, limits)
+- `lib/prepaint.mjs`: the script that shows the saved cart and wishlist before the page is interactive (no flicker)
 - `sanity/`: Sanity config, schemas (`product`, `variant`; categories and sizes come from the config) and clients
 - `app/fonts/`: the bundled fonts, one small module per font (chosen in `config/theme.mjs`)
 - `scripts/reset-local.mjs`: resets local mode (`npm run reset-local`)
 - `scripts/check-config.mjs`: checks the config (`npm run check-config`)
-- `tests/`: tests for the config check, prices, addresses and helpers (`npm test`, no extra packages). They use a fixed example config (`tests/fixtures/config.mjs`), so they pass whatever a shop sets in `config/`; only the check that the shop's own config is valid depends on it.
+- `tests/`: tests for the config check, prices, addresses, the wishlist, the pre-paint script and helpers (`npm test`, no extra packages). They use a fixed example config (`tests/fixtures/config.mjs`), so they pass whatever a shop sets in `config/`; only the check that the shop's own config is valid depends on it.
 
 ## License
 
