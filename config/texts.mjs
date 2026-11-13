@@ -40,6 +40,15 @@ export const textsConfig = {
         unavailable: 'No longer available',
     },
 
+    // Light and dark mode switcher (config/theme.mjs); only needed when the
+    // switcher is on. The mode it switches to: shown next to the icon in the
+    // side menu and the footer, and read out by screen readers for the icon
+    // in the header (also its tooltip).
+    themeSwitcher: {
+        toDark: 'Dark mode',
+        toLight: 'Light mode',
+    },
+
     // Replies shown after sending the contact form
     contactForm: {
         sent: "Message sent! I'll get back to you soon.",

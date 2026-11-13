@@ -3,6 +3,10 @@ import Link from 'next/link';
 import { siteConfig } from '@/config/site.mjs';
 import { footerConfig } from '@/config/pages.mjs';
 import SocialIcon, { SOCIAL_ICONS } from './SocialIcon';
+import ThemeSwitcher from './ThemeSwitcher';
+import { themeConfig } from '@/config/theme.mjs';
+
+const showThemeSwitcher = themeConfig.mode.switcher && themeConfig.mode.showInFooter;
 
 const Footer = () => {
     const year = new Date().getFullYear();
@@ -23,7 +27,7 @@ const Footer = () => {
             <div className="footer-overlay absolute inset-0 z-10"></div>
             <div className="container mx-auto px-6 py-16 text-center z-20 relative h-full w-full">
                 <Link href="/" className="inline-block mb-8 w-[250px]">
-                    <Image width="300" height="100" alt={name} src={logos.light} />
+                    <Image width="300" height="100" alt={name} src={logos.onImage} />
                 </Link>
 
                 {social.length > 0 && (
@@ -52,6 +56,18 @@ const Footer = () => {
                         </p>
                     )}
                 </div>
+
+                {/* Light and dark mode (config/theme.mjs) */}
+                {showThemeSwitcher && (
+                    // Hidden with the switcher when JavaScript is off
+                    <div className="mb-8" data-requires-js="">
+                        <ThemeSwitcher
+                            variant="footer"
+                            className="inline-flex items-center gap-2 rounded-full border border-brand-on-image/50 px-4 py-1.5 text-sm hover:border-brand-on-image hover:bg-brand-on-image/10 transition-colors"
+                            iconClassName="w-4 h-4"
+                        />
+                    </div>
+                )}
 
                 <div className="text-sm space-y-1">
                     <div className="flex justify-center space-x-4 mb-1">

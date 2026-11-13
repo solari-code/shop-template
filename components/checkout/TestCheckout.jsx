@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import ModeLogo from "@/components/ModeLogo";
 import { formatPrice } from "@/utils/formatPrice";
 import { sizeText } from "@/lib/config/shop.mjs";
 import { siteConfig } from "@/config/site.mjs";
@@ -41,7 +42,7 @@ export default function TestCheckout({ checkout, shippingOptions, countries }) {
 
     return (
         <div className="min-h-screen bg-brand-base-100 font-sans font-light text-brand-content">
-            <div className="bg-amber-100 border-b border-amber-200 text-amber-900 text-xs md:text-sm text-center px-4 py-2">
+            <div className="bg-amber-100 border-b border-amber-200 text-amber-900 dark:bg-amber-950/60 dark:border-amber-900 dark:text-amber-100 text-xs md:text-sm text-center px-4 py-2">
                 <span className="font-normal uppercase tracking-widest">Test checkout</span>
                 <span className="mx-2" aria-hidden>·</span>
                 Local mode: no real payment is made. This page stands in for Stripe Checkout.
@@ -53,11 +54,9 @@ export default function TestCheckout({ checkout, shippingOptions, countries }) {
                     <div className="max-w-md md:ml-auto space-y-8">
                         {/* Centred like in the header, so any logo file lines up */}
                         <div className="text-center space-y-6">
-                            <Image
-                                src={siteConfig.logos.dark}
+                            <ModeLogo
                                 width={150}
                                 height={26}
-                                alt={siteConfig.name}
                                 className="h-[22px] w-auto object-contain mx-auto"
                             />
                             <div>
@@ -196,7 +195,7 @@ export default function TestCheckout({ checkout, shippingOptions, countries }) {
                                 </fieldset>
 
                                 {state?.error && (
-                                    <p role="alert" className="text-sm text-red-700 border border-red-200 bg-red-50 px-4 py-3">
+                                    <p role="alert" className="text-sm text-red-700 border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200 px-4 py-3">
                                         {state.error}
                                     </p>
                                 )}

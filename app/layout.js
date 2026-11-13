@@ -2,7 +2,8 @@ import "./globals.css";
 import { siteConfig } from "@/config/site.mjs";
 import { themeConfig } from "@/config/theme.mjs";
 import { siteLanguage } from "@/lib/config/shop.mjs";
-import { themeVariables, fontVariables } from "@/lib/config/theme.mjs";
+import { fontVariables, serverThemeAttribute } from "@/lib/config/theme.mjs";
+import ThemeHead from "@/components/ThemeHead";
 // The fonts chosen in config/theme.mjs (bundled in app/fonts, SIL OFL).
 // next.config.mjs points these names to the chosen font files.
 import bodyFont from "@shop/body-font";
@@ -50,8 +51,14 @@ const fontClasses = [...new Set([bodyFont.variable, headingFont.variable])].join
 
 export default async function RootLayout({ children }) {
   return (
-    // Theme colours and overlays as CSS variables (see app/globals.css)
-    <html lang={siteLanguage} style={themeVariables(themeConfig)}>
+    // data-theme: the light or dark mode when it is fixed or has a default;
+    // the pre-paint script in ThemeHead changes it to a saved choice before
+    // React hydrates, so differences on <html> are expected
+    <html lang={siteLanguage} data-theme={serverThemeAttribute(themeConfig.mode)} suppressHydrationWarning>
+      <head>
+        {/* Theme colours and overlays as CSS variables (see app/globals.css) */}
+        <ThemeHead />
+      </head>
       <body className={`${fontClasses} font-sans antialiased bg-brand-base-100 text-brand-content`} style={fontVariables(themeConfig)}>
         {children}
       </body>

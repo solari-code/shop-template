@@ -1,4 +1,14 @@
 import { siteConfig } from "@/config/site.mjs";
+import { wishlistConfig } from "@/config/wishlist.mjs";
+import { themeConfig } from "@/config/theme.mjs";
+
+// What the shop saves in the visitor's browser (localStorage), following
+// the config: the wishlist and the light or dark mode only when they are on
+const storedInBrowser = [
+    "the contents of your shopping cart",
+    wishlistConfig.enabled && "the products you save to your wishlist",
+    themeConfig.mode.switcher && "your choice of light or dark mode, if you change it with the switcher",
+].filter(Boolean);
 
 export default function PrivacyPolicy() {
     return (
@@ -35,9 +45,26 @@ export default function PrivacyPolicy() {
                     </p>
                 </section>
 
+                <section className="mb-8">
+                    <h2 className="font-heading font-light text-lg md:text-xl text-brand-content mt-6 mb-3">
+                        4. Data stored in your browser
+                    </h2>
+                    <p className="font-sans font-light text-brand-content-soft leading-relaxed">
+                        So that they are still there when you come back, some things are saved in your browser on this device (in its local storage), without an account:
+                    </p>
+                    <ul className="list-disc pl-5 mt-3 space-y-1 font-sans font-light text-brand-content-soft leading-relaxed">
+                        {storedInBrowser.map((item) => (
+                            <li key={item}>{item}</li>
+                        ))}
+                    </ul>
+                    <p className="font-sans font-light text-brand-content-soft leading-relaxed mt-3">
+                        This data is not used to track you and is not shared with third parties. You can delete it at any time by clearing this site&apos;s data in your browser settings.
+                    </p>
+                </section>
+
                 <section>
                     <h2 className="font-heading font-light text-lg md:text-xl text-brand-content mt-6 mb-3">
-                        4. Contact
+                        5. Contact
                     </h2>
                     <p className="font-sans font-light text-brand-content-soft leading-relaxed">
                         If you have questions about this policy, write to us at{" "}

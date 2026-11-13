@@ -5,6 +5,15 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  // `dark:` classes apply in dark mode, with the same rules as the theme
+  // colours (lib/config/theme.mjs, themeStyleSheet): data-theme="dark" on
+  // <html>, or the device prefers dark and no light mode is set or saved.
+  // For the few colours that are not part of the theme, e.g. the red and
+  // green of error and success messages.
+  darkMode: ['variant', [
+    '&:where([data-theme="dark"], [data-theme="dark"] *)',
+    '@media (prefers-color-scheme: dark) { &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) }',
+  ]],
   theme: {
     extend: {
       // Fonts and colours come from config/theme.mjs, as CSS variables set

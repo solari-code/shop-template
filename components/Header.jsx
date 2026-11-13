@@ -3,19 +3,21 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import Drawer from "./Drawer";
+import ModeLogo from "./ModeLogo";
 import CountBadge from "./CountBadge";
 import HeartIcon from "./wishlist/HeartIcon";
+import ThemeSwitcher from "./ThemeSwitcher";
 import { useCartCount } from "@/lib/cartStore";
 import { useWishlistCount } from "@/lib/wishlistStore";
-import { siteConfig } from "@/config/site.mjs";
 import { wishlistConfig } from "@/config/wishlist.mjs";
+import { themeConfig } from "@/config/theme.mjs";
 import { textsConfig } from "@/config/texts.mjs";
 import { shopText } from "@/lib/config/shop.mjs";
 
 const showWishlist = wishlistConfig.enabled && wishlistConfig.showInHeader;
+const showThemeSwitcher = themeConfig.mode.switcher && themeConfig.mode.showInHeader;
 
 // Slightly smaller icons on the narrowest phones, so the logo stays centred
 // between the menu button and the wishlist and cart icons
@@ -54,8 +56,10 @@ export default function HeaderClient({ categories = [] }) {
                 className={`fixed top-0 left-0 w-full flex items-center transition duration-300 p-4 z-[50] ${navBg ? "bg-brand-surface shadow-md backdrop-blur-lg" : "bg-transparent"}`}
                 aria-label="Main navigation"
             >
-                {/* Both sides take the same width, so the logo stays centred */}
-                <div className="flex-1 flex justify-start">
+                {/* Both sides take the same width, so the logo stays centred.
+                    The mode switcher sits next to the menu button, so each
+                    side has two icons on narrow phones. */}
+                <div className="flex-1 flex justify-start items-center gap-1 max-[359px]:gap-0">
                     <button
                         type="button"
                         onClick={() => setMenuOpen(true)}
@@ -67,6 +71,9 @@ export default function HeaderClient({ categories = [] }) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
+                    {showThemeSwitcher && (
+                        <ThemeSwitcher className={`${ICON_LINK} ${textClass}`} iconClassName={ICON_SIZE} />
+                    )}
                 </div>
 
                 <Link href="/" className="flex items-center justify-center shrink-0 h-[26px] min-w-[150px]">
@@ -74,11 +81,9 @@ export default function HeaderClient({ categories = [] }) {
                         className={`inline-flex items-center justify-center transition-opacity duration-300 ${navBg ? "opacity-100" : "opacity-0"}`}
                         style={{ maxHeight: "26px" }}
                     >
-                        <Image
-                            src={siteConfig.logos.dark}
+                        <ModeLogo
                             width={150}
                             height={50}
-                            alt={siteConfig.name}
                             className="h-[26px] w-auto object-contain object-center"
                             style={{ maxHeight: "26px" }}
                             priority

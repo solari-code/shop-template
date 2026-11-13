@@ -157,8 +157,8 @@ const ContactSection = ({
             role="status"
             aria-live="polite"
             className={`mt-6 p-4 md:p-5 rounded-md border font-sans text-sm md:text-base leading-relaxed flex items-center justify-center gap-3 text-center ${status.isError
-              ? "bg-red-50 border-red-200 text-red-800"
-              : "bg-green-50 border-green-200 text-green-800"
+              ? "bg-red-50 border-red-200 text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200"
+              : "bg-green-50 border-green-200 text-green-800 dark:border-green-900 dark:bg-green-950/50 dark:text-green-200"
               }`}
           >
             {status.isError ? (

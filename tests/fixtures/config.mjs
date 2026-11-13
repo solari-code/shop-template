@@ -26,8 +26,9 @@ export const exampleConfig = {
             }
         ],
         "logos": {
-            "dark": "/images/logo/logo_black.png",
-            "light": "/images/logo/logo_slowfashion_white.png",
+            "lightMode": "/images/logo/logo_black.png",
+            "darkMode": "/images/logo/logo_white.png",
+            "onImage": "/images/logo/logo_slowfashion_white.png",
             "openGraph": "/images/logo/openGraph_logo.png"
         },
         "emailSender": {
@@ -119,20 +120,38 @@ export const exampleConfig = {
     },
     "theme": {
         "colors": {
-            "base-100": "#ffffff",
-            "base-200": "#f4f4f6",
-            "base-300": "#e8e8ed",
-            "content": "#1c1917",
-            "primary": "#9567f3",
-            "neutral": "#0b0809",
-            "surface": "#ffffff",
-            "content-inverse": "#ffffff",
-            "content-soft": "#4b5563",
-            "content-muted": "#6b7280",
-            "content-subtle": "#9ca3af",
-            "on-image": "#ffffff",
-            "badge": "#ef4444",
-            "badge-text": "#ffffff"
+            "light": {
+                "base-100": "#ffffff",
+                "base-200": "#f4f4f6",
+                "base-300": "#e8e8ed",
+                "content": "#1c1917",
+                "primary": "#8753f1",
+                "neutral": "#0b0809",
+                "surface": "#ffffff",
+                "content-inverse": "#ffffff",
+                "content-soft": "#4b5563",
+                "content-muted": "#5c636f",
+                "content-subtle": "#666f7f",
+                "on-image": "#ffffff",
+                "badge": "#dc2626",
+                "badge-text": "#ffffff"
+            },
+            "dark": {
+                "base-100": "#121114",
+                "base-200": "#1b1a1e",
+                "base-300": "#2b2a30",
+                "content": "#f4f3f1",
+                "primary": "#a98bf6",
+                "neutral": "#0b0809",
+                "surface": "#1b1a1e",
+                "content-inverse": "#121114",
+                "content-soft": "#c9c7cf",
+                "content-muted": "#a19eaa",
+                "content-subtle": "#85828e",
+                "on-image": "#ffffff",
+                "badge": "#dc2626",
+                "badge-text": "#ffffff"
+            }
         },
         "fonts": {
             "body": "inter",
@@ -151,6 +170,13 @@ export const exampleConfig = {
             "light": "#bbbbbb",
             "border": "#e8e8e8",
             "borderLight": "#f0f0f0"
+        },
+        "mode": {
+            "default": "system",
+            "switcher": true,
+            "showInMenu": true,
+            "showInFooter": true,
+            "showInHeader": false
         }
     },
     "homepage": [
@@ -297,6 +323,10 @@ export const exampleConfig = {
             "heading": "Thank you for your order!",
             "text": "I've received your order and I'm preparing it with lots of care.\nI'll send you an email with the details.",
             "questions": "Any questions?"
+        },
+        "themeSwitcher": {
+            "toDark": "Dark mode",
+            "toLight": "Light mode"
         },
         "contactForm": {
             "sent": "Message sent! I'll get back to you soon.",

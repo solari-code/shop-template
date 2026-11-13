@@ -171,13 +171,13 @@ export default function Cart() {
 function CheckoutNotice({ notice }) {
     if (notice.error) {
         return (
-            <div role="alert" className="border border-red-200 bg-red-50 text-red-800 px-5 py-4 text-sm font-light">
+            <div role="alert" className="border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200 px-5 py-4 text-sm font-light">
                 {notice.error}
             </div>
         );
     }
     return (
-        <div role="alert" className="border border-amber-200 bg-amber-50 text-amber-900 px-5 py-4 text-sm font-light space-y-2">
+        <div role="alert" className="border border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-200 px-5 py-4 text-sm font-light space-y-2">
             <p className="font-normal">Your cart was updated, please check it before continuing.</p>
             <ul className="list-disc pl-5 space-y-1">
                 {notice.issues.map((issue) => (

@@ -1,8 +1,13 @@
 import { siteConfig } from "@/config/site.mjs";
 import { themeConfig } from "@/config/theme.mjs";
 import { siteLanguage } from "@/lib/config/shop.mjs";
+import { defaultColorMode } from "@/lib/config/theme.mjs";
 
-// Web app manifest (/manifest.webmanifest), built from the config.
+// Web app manifest (/manifest.webmanifest), built from the config. It can
+// only hold one set of colours: those of the default mode (light for
+// 'system').
+const colors = themeConfig.colors[defaultColorMode(themeConfig.mode)];
+
 export default function manifest() {
   return {
     name: siteConfig.name,
@@ -10,8 +15,8 @@ export default function manifest() {
     description: siteConfig.description,
     start_url: "/",
     display: "standalone",
-    background_color: themeConfig.colors["base-100"],
-    theme_color: themeConfig.colors.primary,
+    background_color: colors["base-100"],
+    theme_color: colors.primary,
     lang: siteLanguage,
     icons: [
       { src: "/favicon/favicon-16x16.png", sizes: "16x16", type: "image/png", purpose: "any" },

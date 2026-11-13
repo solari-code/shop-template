@@ -12,10 +12,10 @@ import fs from 'node:fs'
 import { exampleConfig } from './fixtures/config.mjs'
 import { shopConfig } from '../config/index.mjs'
 import { checkShopConfig, assertShopConfig, ShopConfigError } from '../lib/config/check.mjs'
-import { validateConfig, validateLocalProducts, startupWarnings, SECTION_TYPES, FONT_NAMES } from '../lib/config/validate.mjs'
+import { validateConfig, validateLocalProducts, startupWarnings, SECTION_TYPES, FONT_NAMES, THEME_COLORS, CONTRAST_PAIRS, MIN_CONTRAST } from '../lib/config/validate.mjs'
 import { fillText, placeholdersIn, textValues } from '../lib/config/text.mjs'
 import * as shop from '../lib/config/shop.mjs'
-import { themeVariables, fontVariables, hexToChannels } from '../lib/config/theme.mjs'
+import { themeVariables, fontVariables, hexToChannels, colorModes, defaultColorMode, contrastRatio } from '../lib/config/theme.mjs'
 import { enabledFeatures, featureOfHref, isHrefAvailable } from '../lib/config/features.mjs'
 
 // An empty folder (no public/), so image files are not checked
@@ -67,8 +67,10 @@ describe("this shop's config (config/)", () => {
         assert.deepEqual(shop.shopCategories(shopConfig.commerce.categories.map(c => c.slug)), shopConfig.commerce.categories)
         for (const size of shopConfig.commerce.sizes) assert.ok(shop.sizeText(size.value).includes(size.label ?? size.value))
         assert.match(shop.contactHref, /^(\/#[a-z][a-z0-9-]*|mailto:\S+@\S+)$/)
-        const vars = themeVariables(shopConfig.theme)
-        for (const name of Object.keys(shopConfig.theme.colors)) assert.match(vars[`--color-${name}-rgb`], /^\d+ \d+ \d+$/)
+        for (const colorMode of colorModes(shopConfig.theme.mode)) {
+            const vars = themeVariables(shopConfig.theme, colorMode)
+            for (const name of THEME_COLORS) assert.match(vars[`--color-${name}-rgb`], /^\d+ \d+ \d+$/, `${colorMode} ${name}`)
+        }
     })
 
     test('the Sanity schema offers its categories and sizes', async () => {
@@ -125,7 +127,7 @@ describe('errors', () => {
         assertError(c => { c.site.contact.whatsapp = '+49 151 1234567' }, 'site.contact.whatsapp', 'digits only')
         assertError(c => { c.site.social.push({ type: 'myspace', url: 'https://myspace.com/me' }) }, 'site.social[1].type', 'not supported')
         assertError(c => { c.site.emailSender.name = 'Shop <x>' }, 'site.emailSender.name')
-        assertError(c => { c.site.logos.dark = 'images/logo.png' }, 'site.logos.dark', 'starting with "/"')
+        assertError(c => { c.site.logos.lightMode = 'images/logo.png' }, 'site.logos.lightMode', 'starting with "/"')
     })
 
     test('missing image files', () => {
@@ -176,10 +178,84 @@ describe('errors', () => {
     })
 
     test('theme', () => {
-        assertError(c => { c.theme.colors.primary = 'purple' }, 'theme.colors.primary', 'hex colour')
+        assertError(c => { c.theme.colors.light.primary = 'purple' }, 'theme.colors.light.primary', 'hex colour')
+        assertError(c => { c.theme.colors.dark.primary = '#12345' }, 'theme.colors.dark.primary', 'hex colour')
+        assertError(c => { delete c.theme.colors.dark.badge }, 'theme.colors.dark.badge', 'Missing')
+        assertError(c => { c.theme.colors.dim = {} }, 'theme.colors.dim', 'Unknown setting')
         assertError(c => { c.theme.fonts.heading = 'comic-sans' }, 'theme.fonts.heading', 'not a bundled font')
         assertError(c => { c.theme.overlays.hero = 120 }, 'theme.overlays.hero')
         assertError(c => { delete c.theme.email.muted }, 'theme.email.muted', 'Missing')
+    })
+
+    test('theme: the colours are set per mode', () => {
+        assertError(c => { c.theme.colors = c.theme.colors.light }, 'theme.colors.base-100', 'Unknown setting')
+        assertError(c => { c.theme.colors = c.theme.colors.light }, 'theme.colors.light', 'Missing')
+    })
+
+    test('theme mode', () => {
+        assertError(c => { c.theme.mode.default = 'auto' }, 'theme.mode.default', 'not a mode')
+        assertError(c => { c.theme.mode.switcher = 'yes' }, 'theme.mode.switcher', 'true or false')
+        assertError(c => { delete c.theme.mode.showInMenu }, 'theme.mode.showInMenu', 'Missing')
+        assertError(c => { c.theme.mode.showInFooter = 'no' }, 'theme.mode.showInFooter', 'true or false')
+        assertError(c => { c.theme.mode.position = 'top' }, 'theme.mode.position', 'Unknown setting')
+        assertError(c => { delete c.theme.mode }, 'theme.mode', 'Missing')
+        for (const value of ['light', 'dark', 'system']) {
+            assert.deepEqual(check(c => { c.theme.mode.default = value }).errors, [], value)
+            assert.deepEqual(check(c => { c.theme.mode.default = value; c.theme.mode.switcher = false }).errors, [], value)
+        }
+    })
+
+    test('theme mode: the switcher texts are needed while the switcher is on', () => {
+        assertError(c => { delete c.texts.themeSwitcher }, 'texts.themeSwitcher', 'Missing')
+        assertError(c => { c.texts.themeSwitcher.toDark = '' }, 'texts.themeSwitcher.toDark', 'empty')
+        assertError(c => { c.texts.themeSwitcher.toNight = 'Night' }, 'texts.themeSwitcher.toNight', 'Unknown setting')
+        assert.deepEqual(check(c => { c.theme.mode.switcher = false; delete c.texts.themeSwitcher }).errors, [])
+        // Checked when set, also with the switcher off
+        assertError(c => { c.theme.mode.switcher = false; c.texts.themeSwitcher.toDark = '{darkName}' }, 'texts.themeSwitcher.toDark', 'Unknown placeholder')
+    })
+
+    test('theme mode: a switcher that is shown nowhere is a warning', () => {
+        const places = ['showInMenu', 'showInFooter', 'showInHeader']
+        const shownOnlyIn = (place) => (c) => { for (const key of places) c.theme.mode[key] = key === place }
+        const hidden = shownOnlyIn(null)
+        assert.deepEqual(check(hidden).warnings, [{
+            path: 'theme.mode.switcher',
+            message: 'The switcher is on but shown nowhere. Set showInMenu, showInFooter or showInHeader to true, or turn the switcher off.',
+        }])
+        assert.deepEqual(check(c => { hidden(c); c.theme.mode.switcher = false }).warnings, [])
+        // Shown in one place is enough
+        for (const place of places) assert.deepEqual(check(shownOnlyIn(place)).warnings, [], place)
+    })
+
+    test('theme: only the palettes the shop can show are required', () => {
+        const fixed = (mode) => (c) => { c.theme.mode.default = mode; c.theme.mode.switcher = false }
+        // Fixed light mode: no dark palette and no dark mode logo needed
+        assert.deepEqual(check(c => { fixed('light')(c); delete c.theme.colors.dark; delete c.site.logos.darkMode }).errors, [])
+        // Fixed dark mode: no light palette needed
+        assert.deepEqual(check(c => { fixed('dark')(c); delete c.theme.colors.light }).errors, [])
+        assertError(c => { fixed('dark')(c); delete c.theme.colors.dark }, 'theme.colors.dark', 'Missing')
+        // 'system' or a switcher can show both
+        assertError(c => { c.theme.mode.switcher = false; delete c.theme.colors.dark }, 'theme.colors.dark', 'Missing')
+        assertError(c => { c.theme.mode.default = 'light'; delete c.theme.colors.dark }, 'theme.colors.dark', 'Missing')
+        assertError(c => { c.theme.mode.default = 'dark'; delete c.theme.colors.light }, 'theme.colors.light', 'Missing')
+        // A palette that is set is checked, even when it isn't shown
+        assertError(c => { fixed('light')(c); c.theme.colors.dark.content = 'white' }, 'theme.colors.dark.content', 'hex colour')
+    })
+
+    test('theme: the header logo of each mode is needed when the shop can show that mode', () => {
+        assertError(c => { delete c.site.logos.darkMode }, 'site.logos.darkMode', 'Missing')
+        assertError(c => { delete c.site.logos.lightMode }, 'site.logos.lightMode', 'Missing')
+        assert.deepEqual(check(c => { c.theme.mode.default = 'dark'; c.theme.mode.switcher = false; delete c.site.logos.lightMode }).errors, [])
+        assertError(c => { c.theme.mode.default = 'light'; c.theme.mode.switcher = false; delete c.site.logos.lightMode }, 'site.logos.lightMode', 'Missing')
+        // The logo for images is needed in both modes
+        assertError(c => { c.theme.mode.default = 'dark'; c.theme.mode.switcher = false; delete c.site.logos.onImage }, 'site.logos.onImage', 'Missing')
+        assertError(c => { c.site.logos.light = c.site.logos.onImage }, 'site.logos.light', 'Unknown setting')
+        assertError(c => { c.theme.mode.default = 'dark'; c.theme.mode.switcher = false; delete c.site.logos.darkMode }, 'site.logos.darkMode', 'Missing')
+        assertError(c => { c.site.logos.darkMode = 'logo.png' }, 'site.logos.darkMode', 'starting with "/"')
+        // Checked when set, even if not needed
+        assertError(c => { c.theme.mode.default = 'light'; c.theme.mode.switcher = false; c.site.logos.darkMode = 'logo.png' }, 'site.logos.darkMode', 'starting with "/"')
+        const { errors } = check(null, { fileExists: (p) => p !== '/images/logo/logo_white.png' })
+        assert.deepEqual(errors, [{ path: 'site.logos.darkMode', message: 'File not found: public/images/logo/logo_white.png' }])
     })
 
     test('homepage sections', () => {
@@ -415,15 +491,96 @@ describe('categories and sizes', () => {
 
 describe('theme', () => {
     test('CSS variables for colours (hex and RGB channels) and overlays', () => {
-        const vars = themeVariables(exampleConfig.theme)
+        const vars = themeVariables(exampleConfig.theme, 'light')
         assert.equal(vars['--color-content'], '#1c1917')
         assert.equal(vars['--color-content-rgb'], '28 25 23')
         assert.equal(vars['--color-surface-rgb'], '255 255 255')
-        assert.equal(vars['--color-content-subtle-rgb'], '156 163 175')
+        assert.equal(vars['--color-content-subtle-rgb'], '102 111 127')
         assert.equal(vars['--overlay-hero'], '35%')
         assert.equal(vars['--overlay-footer'], '10%')
-        // Every configured colour, twice; three overlays
-        assert.equal(Object.keys(vars).length, Object.keys(exampleConfig.theme.colors).length * 2 + 3)
+        // Every colour, twice; three overlays
+        assert.equal(Object.keys(vars).length, THEME_COLORS.length * 2 + 3)
+    })
+
+    test('CSS variables of the dark palette, with the same overlays', () => {
+        const vars = themeVariables(exampleConfig.theme, 'dark')
+        assert.equal(vars['--color-content'], '#f4f3f1')
+        assert.equal(vars['--color-base-100-rgb'], '18 17 20')
+        assert.equal(vars['--overlay-hero'], '35%')
+        assert.equal(Object.keys(vars).length, THEME_COLORS.length * 2 + 3)
+    })
+
+    test('the palettes a shop can show, and the default one', () => {
+        const mode = (value, switcher) => ({ default: value, switcher })
+        assert.deepEqual(colorModes(mode('light', false)), ['light'])
+        assert.deepEqual(colorModes(mode('dark', false)), ['dark'])
+        assert.deepEqual(colorModes(mode('system', false)), ['light', 'dark'])
+        assert.deepEqual(colorModes(mode('light', true)), ['light', 'dark'])
+        assert.deepEqual(colorModes(mode('dark', true)), ['light', 'dark'])
+        // Missing or invalid settings: both, so the check asks for both
+        assert.deepEqual(colorModes(undefined), ['light', 'dark'])
+        assert.deepEqual(colorModes(mode('auto', false)), ['light', 'dark'])
+
+        assert.equal(defaultColorMode(mode('light', true)), 'light')
+        assert.equal(defaultColorMode(mode('dark', false)), 'dark')
+        assert.equal(defaultColorMode(mode('system', true)), 'light')
+        assert.equal(defaultColorMode(undefined), 'light')
+    })
+
+    test('contrast ratio (WCAG 2)', () => {
+        assert.equal(contrastRatio('#000000', '#ffffff'), 21)
+        assert.equal(contrastRatio('#fff', '#000'), 21)
+        assert.equal(contrastRatio('#9567f3', '#9567f3'), 1)
+        assert.equal(contrastRatio('#6b7280', '#ffffff').toFixed(2), '4.83')
+        assert.equal(contrastRatio('#ffffff', '#ef4444').toFixed(2), '3.76')
+    })
+
+    test('contrast pairs use theme colours', () => {
+        for (const { text, background, use } of CONTRAST_PAIRS) {
+            assert.ok(THEME_COLORS.includes(text) && THEME_COLORS.includes(background), `${text} on ${background}`)
+            assert.ok(use)
+        }
+        assert.equal(MIN_CONTRAST, 4.5)
+    })
+
+    test('low contrast is a warning, in the palette where it is', () => {
+        const { errors, warnings } = check(c => { c.theme.colors.dark['content-muted'] = '#3a3940' })
+        assert.deepEqual(errors, [])
+        assert.deepEqual(warnings, [
+            { path: 'theme.colors.dark.content-muted', message: 'Low contrast on base-100 in dark mode (1.6:1, labels and small headings). At least 4.5:1 keeps it readable (WCAG AA).' },
+            { path: 'theme.colors.dark.content-muted', message: 'Low contrast on base-200 in dark mode (1.5:1, labels and small headings). At least 4.5:1 keeps it readable (WCAG AA).' },
+        ])
+        // A background that is too close to the text
+        assert.deepEqual(paths(check(c => { c.theme.colors.light.surface = '#2a2a2a' }).warnings), ['theme.colors.light.content'])
+        // Just below the minimum is not shown as the minimum
+        // (#ef4444: 3.76:1 with white)
+        assert.match(check(c => { c.theme.colors.light.badge = '#ef4444' }).warnings[0].message, /\(3\.7:1/)
+    })
+
+    test('palettes the shop does not show are not checked for contrast', () => {
+        const lowDark = (c) => { c.theme.colors.dark.content = '#121114' }
+        assert.ok(check(lowDark).warnings.length > 0)
+        assert.deepEqual(check(c => { lowDark(c); c.theme.mode.default = 'light'; c.theme.mode.switcher = false }).warnings, [])
+    })
+
+    test('the example themes in config/themes are valid in every mode, without contrast warnings', async () => {
+        const files = fs.readdirSync(new URL('../config/themes/', import.meta.url)).filter(f => f.endsWith('.mjs'))
+        assert.ok(files.length >= 3, 'three example themes')
+        for (const file of files) {
+            const exports = await import(`../config/themes/${file}`)
+            const theme = exports[file.replace('.mjs', '')]
+            assert.ok(theme, `config/themes/${file} exports ${file.replace('.mjs', '')}`)
+            for (const modeDefault of ['light', 'dark', 'system']) {
+                const { errors, warnings } = check(c => { c.theme = { ...structuredClone(theme), mode: { ...c.theme.mode, default: modeDefault } } })
+                assert.deepEqual([...errors, ...warnings], [], `${file}, ${modeDefault}`)
+            }
+        }
+    })
+
+    test("this shop's theme starts from an example theme that keeps the template's look", async () => {
+        const { studio } = await import('../config/themes/studio.mjs')
+        assert.deepEqual(studio.colors.light, exampleConfig.theme.colors.light)
+        assert.deepEqual(studio.fonts, { body: 'inter', heading: 'inter' })
     })
 
     test('hex colours to RGB channels', () => {

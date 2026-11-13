@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 /* Colours (--color-*), overlays (--overlay-*) and fonts (--font-body,
-   --font-heading) come from config/theme.mjs; the root layout sets them. */
+   --font-heading) come from config/theme.mjs; the root layout sets them.
+   The colours of the light and dark mode are in a stylesheet in <head>
+   (components/ThemeHead.jsx, lib/config/theme.mjs). */
 
 @layer base {
   h1, h2, h3, h4, h5, h6 {

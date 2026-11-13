@@ -5,7 +5,8 @@
 import test, { describe } from 'node:test'
 import assert from 'node:assert/strict'
 import vm from 'node:vm'
-import { prepaintScript } from '../lib/prepaint.mjs'
+import { prepaintScript, themePrepaintScript } from '../lib/prepaint.mjs'
+import { THEME_STORAGE_KEY, savedColorMode } from '../lib/theme.mjs'
 import { cartItemCount } from '../lib/cart.mjs'
 import { cleanWishlist } from '../lib/wishlist.mjs'
 
@@ -80,5 +81,43 @@ describe('pre-paint script', () => {
 
     test('the options cannot end the script tag', () => {
         assert.ok(!prepaintScript({ ...KEYS, cartKey: '</script><b>' }).includes('</script>'))
+    })
+})
+
+describe('theme pre-paint script', () => {
+    // Runs the script with this saved value (or a getItem that throws) and
+    // returns data-theme on <html> afterwards
+    function runTheme(saved, { initial = null, throws = false } = {}) {
+        const attributes = initial ? { 'data-theme': initial } : {}
+        const sandbox = {
+            window: { localStorage: { getItem: (key) => { if (throws) throw new Error('denied'); return key === THEME_STORAGE_KEY ? saved : null } } },
+            document: { documentElement: { setAttribute: (name, value) => { attributes[name] = value } } },
+        }
+        vm.runInNewContext(themePrepaintScript({ storageKey: THEME_STORAGE_KEY }), sandbox)
+        return attributes['data-theme'] ?? null
+    }
+
+    test('applies a saved light or dark mode', () => {
+        assert.equal(runTheme('dark'), 'dark')
+        assert.equal(runTheme('light'), 'light')
+        // Over the default mode rendered by the server
+        assert.equal(runTheme('dark', { initial: 'light' }), 'dark')
+    })
+
+    test('leaves the page as it is without a valid saved choice', () => {
+        for (const saved of [null, '', 'system', 'DARK', '{"state":"dark"}']) {
+            assert.equal(runTheme(saved), null, String(saved))
+            assert.equal(runTheme(saved, { initial: 'light' }), 'light', String(saved))
+            // Accepts the same values as the app
+            assert.equal(savedColorMode(saved), null)
+        }
+    })
+
+    test('without storage access, nothing breaks', () => {
+        assert.equal(runTheme('dark', { throws: true }), null)
+    })
+
+    test('the storage key is escaped for the <script> tag', () => {
+        assert.ok(!themePrepaintScript({ storageKey: '</script><script>alert(1)//' }).includes('</script>'))
     })
 })

@@ -45,10 +45,17 @@ export const siteConfig = {
 
     // Image files in /public
     logos: {
-        // Dark logo on light backgrounds (header, test checkout)
-        dark: '/images/logo/logo_black.png',
-        // Light logo on images (hero, footer)
-        light: '/images/logo/logo_slowfashion_white.png',
+        // Header and test checkout in light mode: a dark logo for the
+        // light header bar. Only needed when the shop can show the light
+        // mode (config/theme.mjs).
+        lightMode: '/images/logo/logo_black.png',
+        // Header and test checkout in dark mode: a light version of the same
+        // logo, so the header looks the same in both modes. Only needed
+        // when the shop can show the dark mode.
+        darkMode: '/images/logo/logo_white.png',
+        // On the photos of the hero section and the footer, in both modes:
+        // a light logo that stands out on the darkened images
+        onImage: '/images/logo/logo_slowfashion_white.png',
         // Preview image for social media (1200 x 630)
         openGraph: '/images/logo/openGraph_logo.png',
     },

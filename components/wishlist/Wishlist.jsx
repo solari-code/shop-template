@@ -191,7 +191,7 @@ function MovedNotice({ title }) {
 
 function LoadError({ onRetry }) {
     return (
-        <div role="alert" className="mb-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border border-red-200 bg-red-50 text-red-800 px-5 py-4 text-sm font-light">
+        <div role="alert" className="mb-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200 px-5 py-4 text-sm font-light">
             <span>Your saved products could not be loaded.</span>
             <button type="button" onClick={onRetry} className="underline">
                 Try again
